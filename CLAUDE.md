@@ -2,8 +2,9 @@
 
 This file is optional orientation, not project authority. Start at [README](README.md); use
 [documentation ownership](CONTRIBUTING.md#documentation-ownership) to find the document that
-decides. Current work/dependencies live in GitHub Issues/Projects;
-[ADRs](docs/decisions/README.md) explain durable decisions.
+decides. The [roadmap](docs/roadmap.md) holds the milestone plan and current phase; issue-level
+work and dependencies live in GitHub Issues/Projects; [ADRs](docs/decisions/README.md) explain
+durable decisions.
 
 - Read the issue/maintainer authority and dependencies before implementation.
   Raise an unresolved architectural question rather than deciding it in code.

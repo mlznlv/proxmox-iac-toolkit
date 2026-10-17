@@ -97,9 +97,11 @@ CLI. This procedure introduces no permanent CI version matrix.
 
 Implementation starts from a [Specification](.github/ISSUE_TEMPLATE/spec.yml) and, when needed,
 an [Implementation task](.github/ISSUE_TEMPLATE/task.yml). Boundary or decision changes use an
-[Architecture change](.github/ISSUE_TEMPLATE/architecture.yml); execution-state and milestone
-reconciliation belongs to the PO in GitHub Issues/Projects. Check dependencies and authority
-before implementation; do not decide new architecture inside an implementation PR.
+[Architecture change](.github/ISSUE_TEMPLATE/architecture.yml). Recording milestone completion,
+the current phase or the next action is PO-owned roadmap reconciliation, raised as an Issue and
+judged against the roadmap's own exit criteria; it is not an Architecture change. Check
+dependencies and authority before implementation; do not decide new architecture inside an
+implementation PR.
 
 Use a focused branch/worktree from current `main`. A PR follows the
 [template](.github/pull_request_template.md), cites its issue or explicit maintainer authority,
@@ -123,8 +125,8 @@ of repeating its rules, tables, or validation logs.
 | Cross-component consumer workflow | `docs/using.md` |
 | System boundaries, dependency direction, repository ownership | `docs/architecture.md` |
 | Supported targets and evidence level | `docs/compatibility.md` |
-| Near-term direction | `docs/roadmap.md` |
-| Current execution state, blockers, and run logs | GitHub Issues and Projects |
+| Milestone plan (sequence, goals, entry/exit criteria, dependencies), current phase, next action | `docs/roadmap.md` |
+| Issue-level status, blockers, and run logs | GitHub Issues and Projects |
 | Release rules | `docs/release-policy.md` |
 | Reasons for durable decisions | `docs/decisions/` |
 | Current interface, lifecycle, examples, limitations | Component and example READMEs |

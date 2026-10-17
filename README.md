@@ -34,7 +34,7 @@ To work on the toolkit itself, follow [Contributing](CONTRIBUTING.md).
 | [Security](SECURITY.md) | Publication safety and reporting |
 | [Architecture](docs/architecture.md) | Boundaries, dependencies and ownership |
 | [Compatibility](docs/compatibility.md) | Targets and evidence levels |
-| [Roadmap](docs/roadmap.md) | Near-term direction; execution tracking lives in issues |
+| [Roadmap](docs/roadmap.md) | Approved milestone plan and current phase |
 | [Decisions](docs/decisions/README.md) | Durable rationale and ADR convention |
 | [Release policy](docs/release-policy.md) | Release gates, immutability and corrections |
 | [Changelog](CHANGELOG.md) | Consumer-visible changes |
