@@ -23,10 +23,10 @@ decision.
 ## What you own
 
 Supply provider configuration, endpoint and runtime credentials; backend and state custody;
-templates; node/storage/network identifiers; sizing and addresses; SSH authentication;
-inventory; and execution order. The toolkit provides no acquisition, update, synchronization,
-discovery or orchestration service. Component READMEs specify the prerequisites for VLANs, DHCP,
-IPv6 and templates.
+templates; node/storage/network identifiers; sizing, addresses, DNS servers and search domain;
+SSH authentication; inventory; and execution order. The toolkit provides no acquisition, update,
+synchronization, discovery or orchestration service. Component READMEs specify the prerequisites
+for VLANs, DHCP, IPv6 and templates.
 
 ## Workflow
 
@@ -72,6 +72,11 @@ workflow. The toolkit migrates no checkout, inventory, provider constraint, stat
 configuration. [Release policy](release-policy.md) defines maturity and immutability; a version
 label is not a stability guarantee.
 
+A revision that adds a required input stops a configuration written before it with
+`Missing required argument`, as the one that added the VM module's `dns_search_domain` does.
+Choose the value deliberately before you supply it: the changelog entry for that revision says
+what to decide and what the plan will then show.
+
 ## Moving from `homelab-iac-toolkit`
 
 The rename to `proxmox-iac-toolkit` preserved commits and tags; keep your SHA.
@@ -91,7 +96,7 @@ The rename to `proxmox-iac-toolkit` preserved commits and tags; keep your SHA.
 | `Unreadable module directory` | Establish the checkout; local `source` resolves relative to the declaring module. |
 | Role not found; checkout absent from search path | Load `ansible.cfg` from its directory or set `ANSIBLE_CONFIG`. |
 | Role not found; checkout present in search path | Verify the checkout exists there. Relative config paths resolve against the config file. |
-| Missing/rejected input | Read the named validation rule and component interface; static IPv4 values are conditionally required. |
+| Missing/rejected input | Read the named validation rule and component interface; static IPv4 values are conditionally required. An input a new revision requires, such as `dns_search_domain`, needs a deliberately chosen value; see [Upgrading](#upgrading). |
 | Inventory-mapping test fails | Update the manual inventory mapping with the reviewed connection output. |
 | `Could not match supplied host pattern` | Match the play's group to inventory; syntax checking can pass while the play runs on no hosts. |
 | Components seem to differ in revision | Verify both paths reach one checkout at the recorded SHA; there is no automatic drift detector. |

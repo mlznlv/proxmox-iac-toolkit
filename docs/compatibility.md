@@ -24,9 +24,28 @@ updates; a changed durable policy requires an ADR.
 ## OpenTofu CLI compatibility and evidence
 
 [ADR 0016](decisions/0016-module-cli-minimum-and-evidence-policy.md) retains 1.6.0 as the
-consumer minimum for both modules. The corrected VM source in [PR #123](https://github.com/mlznlv/proxmox-iac-toolkit/pull/123),
-module tree `13e5f2b8b576d4a501c5bb7048e873b53831ec68`, passed consuming-root checks on
-1.6.0 and 1.9.4 with unmodified source, fictional inputs and its committed provider lock read-only.
+consumer minimum for both modules.
+
+**The VM source with the required search domain meets its declared minimum in the checks run.**
+The VM module of [#135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135), whose
+`tofu/modules/proxmox-linux-vm` directory is Git tree
+`ca015a928287aee35feba0c1ab559373da9a74bb`, was checked unmodified through a fictional consuming
+root on 1.6.0 and 1.9.4, and on the contributor pin, with the module's committed provider lock
+read only. Initialization and validation succeeded with every nullable input at its default.
+Single- and multi-label search domains, DHCP, and static IPv6 beside an additional attachment
+planned with refresh disabled, each with the domain unchanged, and so did a 63-character name
+with a 189-character domain, 253 characters together. An omitted domain stopped with OpenTofu's
+required-argument error and a list with its type error; null, empty, whitespace, malformed,
+overlong, trailing-dot and bare-dot values and a qualified name each stopped with the module's
+own message; and a name and domain of 254 characters together stopped at the module's
+precondition. [The evidence
+record](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135#issuecomment-6244971461) gives
+the CLI and provider identities, every case and its result. These are sampled initialization,
+validation and plan results, not full feature qualification or an interval-wide guarantee.
+
+The corrected VM source in [PR #123](https://github.com/mlznlv/proxmox-iac-toolkit/pull/123),
+module tree `13e5f2b8b576d4a501c5bb7048e873b53831ec68`, passed consuming-root checks on 1.6.0
+and 1.9.4 with unmodified source, fictional inputs and its committed provider lock read-only.
 
 | Corrected VM check | Recorded result on both CLIs |
 | --- | --- |
@@ -67,6 +86,7 @@ rules.
 | Additional attachments | [PR #102](https://github.com/mlznlv/proxmox-iac-toolkit/pull/102), [ADR 0014](decisions/0014-additional-attachment-retirement-lifecycle.md) | Synthetic-state plans, source-grounded modeled read-back, supported updates and retained-entry counterexamples |
 | DHCP/primary MAC | [PR #114](https://github.com/mlznlv/proxmox-iac-toolkit/pull/114), [ADR 0012](decisions/0012-dhcp-primary-attachment-addressing.md) | Mode/MAC mapping, in-place plans and modeled subsequent no-change plans |
 | Static IPv6 | [PR #113](https://github.com/mlznlv/proxmox-iac-toolkit/pull/113), [ADR 0013](decisions/0013-static-ipv6-primary-attachment.md) | Add/change/remove plans and modeled convergence across IPv4 modes; pinned cloud-init renderer source |
+| VM DNS search domain | [PR #135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135), [ADR 0019](decisions/0019-explicit-vm-dns-search-domain.md) | Declare, adopt and change plans in both IPv4 modes and beside IPv6 and an additional attachment, modeled subsequent no-change plans; pinned provider and qemu-server source |
 | LXC | [PR #107](https://github.com/mlznlv/proxmox-iac-toolkit/pull/107), [ADR 0015](decisions/0015-first-lxc-lifecycle-and-dns-contract.md) | Synthetic-state lifecycle plans plus provider/SDK/Proxmox inspection for keys, DNS, shrink, nesting, reboot and read/destroy behavior |
 
 No apply or live refresh was executed by this evidence. Source-grounded modeled read-back is
@@ -78,12 +98,13 @@ recurring differences for a supported update block adoption pending Architecture
 ### VM DNS search domain
 
 [ADR 0019](decisions/0019-explicit-vm-dns-search-domain.md) adopts a required explicit
-consumer-owned single DNS search domain for the VM. This is an approved breaking input addition
-awaiting implementation, not an existing VM input or a new PVE/provider target. The VM name
-remains one DNS label; the combined generated `name.domain` must pass the locally decidable
-length limit, not just each input separately. DNS servers remain required, and primary IPv4
-static/DHCP, optional static IPv6, additional attachments and declared `connection` metadata
-retain their contracts.
+consumer-owned single DNS search domain for the VM. This is a breaking input addition,
+implemented as the module's required `dns_search_domain` input by
+[#135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135), not a new PVE/provider target.
+The VM name remains one DNS label; the combined generated `name.domain` must pass the locally
+decidable length limit, not just each input separately. DNS servers remain required, and primary
+IPv4 static/DHCP, optional static IPv6, additional attachments and declared `connection`
+metadata retain their contracts.
 
 VM-specific source for locked v0.111.1 at `b22fe919fc34476b232191b69c8907f0c1aa5bea` and
 qemu-server at `14c0f871fa926e04eee090afae5d2d8670aa4a79` establishes independent template/node
@@ -96,6 +117,17 @@ converge. Developer acceptance requires exact-provider implementation evidence a
 no-change plans grounded in update/read behavior, separately from module mocks. Removal and
 return to inheritance are unsupported. A build merely allowed by the provider constraint
 acquires no lifecycle evidence until reviewed; upgrades must re-evaluate this gate.
+
+The implementation's [exact-provider
+record](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135#issuecomment-6244965948) used the
+locked v0.111.1 build, refresh disabled, and synthetic prior states, in static and DHCP modes
+and beside static IPv6 and an additional attachment. Creating a VM with a declared domain
+planned a create. Declaring one on a VM without its own, replacing one its template supplied,
+and changing one declared domain to another each planned an in-place update with no replacement
+path that changed only the search domain, and a further plan against a state modelled on the
+provider's read path proposed nothing. Declaring the template's own domain planned no change.
+This is provider planning plus source evidence, not executed apply/refresh or live guest
+evidence.
 
 The [investigation
 record](https://github.com/mlznlv/proxmox-iac-toolkit/issues/121#issuecomment-6233199488)

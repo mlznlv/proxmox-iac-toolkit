@@ -18,14 +18,14 @@ template need not contain the agent.
 
 The clone inherits template disks and configuration. The template or Proxmox's default chooses
 cloud-init format and per-instance package upgrade behavior; the template's default-user
-configuration chooses bootstrap groups/sudo rules. The module supplies no VM DNS search-domain
-input: template/node inheritance still applies. [ADR 0019](../../../docs/decisions/0019-explicit-vm-dns-search-domain.md)
-is accepted for later implementation; the input is not available yet.
+configuration chooses bootstrap groups/sudo rules. The VM's DNS search domain is the one you
+declare, not the template's or node's; see [DNS search domain](#dns-search-domain).
 
-You supply bridges, VLAN transport/switching/routing, suitable addresses and DNS; DHCP
-service/reservations/naming; IPv6 prefix allocation, uniqueness, routing, upstream service and
-any router advertisements; and SSH private keys. The module cannot check that an address/gateway
-belongs on a bridge or VLAN.
+You supply bridges, VLAN transport/switching/routing, suitable addresses and DNS; the DNS search
+domain you declare, the namespace and DNS service behind it, and a domain that fits with the
+VM's name; DHCP service/reservations/naming; IPv6 prefix allocation, uniqueness, routing,
+upstream service and any router advertisements; and SSH private keys. The module cannot check
+that an address/gateway belongs on a bridge or VLAN.
 
 ## Quick start
 
@@ -46,6 +46,7 @@ module "fictional_vm" {
   ipv4_address_cidr = "192.0.2.10/24"
   ipv4_gateway      = "192.0.2.1"
   dns_servers       = ["192.0.2.53"]
+  dns_search_domain = "example.invalid"
   username          = "fictional"
   ssh_public_keys   = [trimspace(file(pathexpand("~/.ssh/id_ed25519.pub")))]
 }
@@ -72,6 +73,7 @@ Required:
 | `ipv4_address_cidr` | `string` | Static IPv4 address in dotted decimal with a prefix length from 8 to 32, such as `192.0.2.10/24`. Required in static mode, the default; must be null with [DHCP](#dhcp-addressing). |
 | `ipv4_gateway` | `string` | IPv4 default gateway in dotted decimal, without a prefix length. Required in static mode; must be null with DHCP. |
 | `dns_servers` | `list(string)` | IPv4 or IPv6 DNS servers, in order of preference. At least one. |
+| `dns_search_domain` | `string` | DNS search domain for the guest: one DNS name, such as `example.invalid`, without a trailing dot. There is no default and no value for no search domain. See [DNS search domain](#dns-search-domain). |
 | `username` | `string` | Bootstrap account cloud-init creates. |
 | `ssh_public_keys` | `list(string)` | OpenSSH **public** keys authorized for that account. At least one, each one key on one line; a trailing newline is allowed. |
 
@@ -96,7 +98,10 @@ address families/prefixes, modes, conditional requirements, and duplicate declar
 addresses are checked in [`variables.tf`](variables.tf) and [`main.tf`](main.tf). Runtime
 prerequisites remain the consumer's responsibility. IPv4 addresses, gateways and DNS servers
 reject leading-zero octets; IPv4-mapped IPv6 is not accepted as IPv4. SSH-key base64 allows at
-most two padding characters.
+most two padding characters. A DNS search domain that is null, empty or contains whitespace,
+ends with a dot, is longer than 253 characters, has a label longer than 63 characters or one
+that is not letters, digits and inner hyphens, or names more than one domain is rejected, as is
+a name and search domain longer than 253 characters together.
 
 ## Outputs
 
@@ -190,6 +195,92 @@ IPv6 fields or a typo such as `vlan` do nothing. Review the actual planned field
 means no configuration declared by this module: inherited template `ipconfig` entries, earlier
 slot addresses or guest configuration may still supply one.
 
+## DNS search domain
+
+`dns_search_domain` is the search domain the guest is given, declared in the VM's cloud-init
+configuration exactly as you write it. It is required beside `dns_servers`, and it has no
+default: the domain, the namespace it names, and the DNS service behind it are yours, and the
+module will not choose one for you. The [Quick start](#quick-start) declares `example.invalid`,
+which is reserved by [RFC 2606](https://www.rfc-editor.org/info/rfc2606/) and names nothing
+real.
+
+It takes one DNS name: labels of ASCII letters, digits, and inner hyphens, each at most 63
+characters, separated by dots, at most 253 characters in all, and with no trailing dot. A single
+label, such as `test`, is accepted. A null, an empty value, whitespace anywhere, a list of
+domains in any form, and `.` alone are rejected when you plan, each with a message naming the
+rule, and there is no value that asks for no search domain.
+
+**A template's or node's search domain no longer applies.** Without a declaration, a clone keeps
+whatever search domain its template has, and Proxmox gives a VM that has none the search domain
+of the node it runs on, even though the DNS servers are yours. Declaring one makes the domain
+yours in both cases. [ADR 0019](../../../docs/decisions/0019-explicit-vm-dns-search-domain.md)
+records why.
+
+**Proxmox also uses it to name the guest.** It joins the VM's `name` and the search domain into
+the guest's fully qualified name, `name.domain`. The two together must fit in 253 characters,
+and a combination that does not is rejected when you plan, even when each is valid alone. `name`
+stays one DNS label: the search domain does not let you write a qualified name there. The
+`connection` output never has the domain appended; publish a name through `connection_host` if
+you want one.
+
+### Declaring or changing the domain on an existing VM
+
+**This input is a breaking addition.** A configuration written for a revision without it stops
+at `Missing required argument` until it declares one. Before you move your pin to a revision
+that has it, choose a domain and add it to every call of this module. Nothing discovers the
+domain a VM has now, carries it over, or rewrites your configuration. If you want to keep the
+domain a VM uses today, look it up in its template's or node's configuration and declare it;
+that is a choice you make, not a default.
+
+Declaring a search domain on a VM created without one, or changing it to another, updates the VM
+in place; it does not replace it. With the provider build this repository locks, the plan
+changes only the search domain in the VM's cloud-init configuration, and once that update is
+applied the next plan proposes nothing. That holds whether the VM had no search domain of its
+own or one its template gave it. Declaring the domain the template already gave it plans no
+change at all.
+
+It is still disruptive, as any change to the cloud-init configuration is. It rebuilds the
+cloud-init drive and reboots a running VM, and the changed data makes the next boot a new
+cloud-init instance. Cloud-init re-applies its configuration and, unless your template's
+configuration says otherwise, deletes and regenerates the guest's SSH host keys, so expect a
+host-key warning and connections to drop. This module offers no way to make the change without
+that disruption. The guest's fully qualified name can change too, even when the domain does not
+seem to: a VM that took the node's search domain was named without one, so declaring that same
+domain gives it `name.domain` for the first time.
+
+Read the plan before you apply it, and apply it explicitly. Declaring or changing the domain
+shows the VM as `update in-place`, with only the DNS `domain` in `initialization` changing. If a
+plan shows the VM being replaced, or anything else changing, do not apply it: that is not the
+behaviour this module relies on. Check which provider build your root module's lock selects,
+because only the build named below has been evaluated.
+
+### Removing the domain is not supported
+
+Removing the search domain, setting it empty, returning a VM to its template's or node's search
+domain, and running it without one are not supported, and the module refuses a null or empty
+value rather than asking for any of them. The locked provider leaves an empty domain out of its
+request instead of clearing the one Proxmox holds, and reads that one back, so such a change
+would never settle: every plan would propose it again. Choose a domain you mean to keep.
+Declaring the value a template or node supplied is an ordinary change of domain, and the VM then
+keeps it as declared.
+
+### Where the search-domain behaviour is evidenced
+
+All of the above is for the provider build this repository locks, `bpg/proxmox` v0.111.1, at
+provider level. Credential-free plans made with that build, with refresh disabled, against
+synthetic prior states covered creating a VM with a declared domain, declaring one on a VM that
+had none and on one whose template gave it another, and changing one declared domain to another,
+each in static and DHCP modes and beside static IPv6 and an additional attachment. Each was then
+planned again against a state modelled on the provider's read path, and proposed nothing; no
+apply and no refresh was run. The inheritance, naming and empty-domain behaviour above is read
+from the provider's and Proxmox's source.
+
+None of it has been observed against a real Proxmox VE. Nothing here shows that a guest's
+resolver uses the domain, that its hostname or fully qualified name changes, that the reboot
+succeeds, that host keys are regenerated, or that the guest is reachable afterwards.
+[Compatibility](../../../docs/compatibility.md#vm-dns-search-domain) records that boundary, and
+your root module's own lock decides which provider build you run.
+
 ## Lifecycle
 
 These are provider-level expectations, not observed live behavior; the exact build and evidence
@@ -205,6 +296,7 @@ requiring provider/Architecture review.
 | Remove a MAC declaration | Retains the current address; no change. Case-only edits can still plan a device change |
 | Add/change an attachment address, including the primary's own; switch static/DHCP | In-place, with only `ipconfig0` changing for a mode switch; initialization consequences below |
 | Add/change/remove primary IPv6 or change DNS | In-place, with only `initialization` changing for an IPv6-only change; initialization consequences below |
+| Declare or change the DNS search domain | In-place, with only the DNS `domain` in `initialization` changing; initialization consequences below. Removal is unsupported; see [DNS search domain](#dns-search-domain) |
 | Change only connection host/port | Output only; no infrastructure change |
 | Change source template | Replacement destroys the VM and its disks |
 
@@ -257,9 +349,10 @@ trade-off. Destroy remains destructive.
 
 No template acquisition, linked/cross-node clones, disk mutation, DHCP service or address
 discovery, extra gateways/routes, configurable NIC models, firewall, MTU/rate/queue/link state,
-guest network management, HA or pools are included. Continuing packages, users, keys and SSH
-configuration belong to the consumer. For containers use the [separate
-module](../proxmox-linux-container/README.md).
+guest network management, HA or pools are included. Nor does it support more than one DNS search
+domain, no search domain, a search domain left to the template or node, or a qualified VM name.
+Continuing packages, users, keys and SSH configuration belong to the consumer. For containers
+use the [separate module](../proxmox-linux-container/README.md).
 
 [`tests/`](tests) checks declarations and invalid inputs with a mocked provider. Those checks
 run on the contributor OpenTofu pin in `.tool-versions`, not at this module's consumer minimum,

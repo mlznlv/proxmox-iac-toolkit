@@ -134,6 +134,56 @@ variable "dns_servers" {
   }
 }
 
+variable "dns_search_domain" {
+  description = "DNS search domain for the guest: one DNS name, such as example.invalid, declared unchanged in the VM's cloud-init configuration. It is required and has no default, because a clone otherwise keeps its template's search domain, and with none Proxmox gives the guest the node's. Proxmox also joins it to name as the guest's fully qualified name, which must fit in 253 characters. A list of domains, an empty value, a trailing dot, and a null are not accepted, and there is no value that asks for no search domain. Declaring or changing it on an existing VM reboots it if it is running; see the README."
+  type        = string
+
+  # Deliberately nullable, so that a null is refused by the first rule below,
+  # with a message that names it, rather than by OpenTofu's own diagnostic.
+  # Every later rule passes a null through, and chooses with a conditional
+  # rather than `||` because OpenTofu evaluates both sides before 1.10.
+  validation {
+    condition     = var.dns_search_domain != null
+    error_message = "The dns_search_domain cannot be null. Declare one DNS search domain, such as example.invalid: there is no default, and no value asks for no search domain."
+  }
+
+  validation {
+    condition     = var.dns_search_domain == null ? true : var.dns_search_domain != ""
+    error_message = "The dns_search_domain cannot be empty. Declare one DNS search domain, such as example.invalid: there is no value that asks for no search domain."
+  }
+
+  # Proxmox splits a search domain on whitespace into a list of domains.
+  validation {
+    condition     = var.dns_search_domain == null ? true : !can(regex("\\s", var.dns_search_domain))
+    error_message = "The dns_search_domain must contain no whitespace, including at either end. It is one domain, and Proxmox would read a value with spaces as a list of domains."
+  }
+
+  validation {
+    condition     = var.dns_search_domain == null ? true : !endswith(var.dns_search_domain, ".")
+    error_message = "The dns_search_domain must not end with a dot: write example.invalid, not example.invalid., and a dot alone is not a domain."
+  }
+
+  validation {
+    condition     = var.dns_search_domain == null ? true : length(var.dns_search_domain) <= 253
+    error_message = "The dns_search_domain must be at most 253 characters."
+  }
+
+  validation {
+    condition     = var.dns_search_domain == null ? true : alltrue([for label in split(".", var.dns_search_domain) : length(label) <= 63])
+    error_message = "Every label of the dns_search_domain, the part between two dots, must be at most 63 characters."
+  }
+
+  # Values the rules above already refuse are passed through, so each gets the
+  # one message that names its rule.
+  validation {
+    condition = var.dns_search_domain == null ? true : (
+      var.dns_search_domain == "" || can(regex("\\s", var.dns_search_domain)) || endswith(var.dns_search_domain, ".") ||
+      can(regex("^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$", var.dns_search_domain))
+    )
+    error_message = "The dns_search_domain must be one DNS name, such as example.invalid: labels of ASCII letters, digits, and inner hyphens, separated by single dots. A list of domains is not accepted in any form."
+  }
+}
+
 variable "username" {
   description = "Username of the bootstrap account cloud-init creates in the guest. Continuing ownership of guest users belongs to the consumer's configuration management, not to this module."
   type        = string
