@@ -24,8 +24,8 @@ record authorizes no implementation or live run.
   access. Grant nothing on `/`, other guests/pools, node configuration,
   storage/user/token/permission administration. Name any further required read-only privilege in
   the implementation record; remove grants when the run ends.
-- Use an isolated dedicated reference environment, nested or a confined shared part, never a
-  deployment. Templates are read-only/publicly identified; network routes are limited to
+- Use an isolated dedicated reference environment running the supported PVE major, nested or a
+  confined shared part, never a deployment. Templates are read-only/publicly identified; network routes are limited to
   scenario needs. OpenTofu creates every guest from run-owned roots/state, at initially free IDs
   with a random non-secret run label; one run holds the environment.
 - Predeclare guest/CPU/memory/disk maxima, wall-clock/per-step/cleanup limits within operator
@@ -38,7 +38,7 @@ record authorizes no implementation or live run.
   failed/inconclusive run at the same identities, not only successes; claims cover exact
   recorded scenarios/identities and require new runs when changed.
 
-## Rationale
+## Context
 
 The threats are untrusted code reaching credentials, reviewed code misbehaving, destruction
 outside a run, output leakage, abandoned capacity and overclaiming. GitHub environment approval
@@ -63,7 +63,7 @@ scenarios need accepted compositions.
 
 On cleanup failure retain state/resource identifiers privately. Recovery first retries OpenTofu
 destroy from retained state; an operator checks each remaining resource against the run record
-before manual removal. Nothing adopts/imports or changes deployment
+before manual removal. Nothing reads, adopts/imports or changes deployment
 state/roots/inventory/guests. Fixture changes get new identities; the toolkit restores neither
 environment nor templates. Costs are operator capacity and time, with no paid-service
 requirement.
