@@ -1094,9 +1094,9 @@ run "an_ipv6_gateway_without_an_ipv6_address_is_rejected" {
 }
 
 # The DNS search domain is one DNS name, required, with no default and no value
-# that asks for no search domain. Each run breaks one of its rules. The names
-# are reserved by RFC 2606, and the long ones are counted in the comment beside
-# them.
+# that asks for no search domain. Each run breaks one of its rules. The short
+# names are reserved by RFC 2606; the long ones, counted in the comment beside
+# them, are synthetic strings that only measure length.
 
 run "a_null_dns_search_domain_is_rejected" {
   command = plan

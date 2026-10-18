@@ -1027,8 +1027,9 @@ run "ipv6_stays_on_the_primary_attachment" {
 # in each addressing mode, and leaving the DNS servers, addressing, and
 # connection output as they were. They do not show that Proxmox stores it, that
 # the provider changes an existing VM in place, or that a guest uses it: that
-# is provider and runtime behaviour, which a mock cannot exercise. The names are
-# reserved by RFC 2606.
+# is provider and runtime behaviour, which a mock cannot exercise. The short
+# names are reserved by RFC 2606; the long generated ones are synthetic strings
+# that only measure length.
 
 run "a_dns_search_domain_reaches_cloud_init_unchanged" {
   command = plan
