@@ -191,16 +191,17 @@ and requalification.
 ## VM DNS search domain
 
 [ADR 0019](decisions/0019-explicit-vm-dns-search-domain.md) requires an explicit consumer-owned
-search domain as a breaking addition to the existing VM bootstrap interface. It is approved
-Architecture for a later focused implementation, not a claim that the input is already
-available.
+search domain as a breaking addition to the existing VM bootstrap interface. The VM module
+implements it as the required `dns_search_domain` input, delivered by
+[#135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135).
 
 The contract belongs in the existing VM module and resource. Its required input, fictional
 domain example, breaking adoption guidance and cloud-init/FQDN/reboot warnings belong in the
-module README and existing consumer guidance when implemented. That implementation keeps the
-existing consumer example and validation fixtures consistent with the new required input; it
-introduces no new example, module, Ansible role, DNS abstraction or orchestration, and leaves
-the separate LXC contract unchanged.
+[module README](../tofu/modules/proxmox-linux-vm/README.md#dns-search-domain) and existing
+[consumer guidance](using.md). The implementation keeps the existing consumer example and
+validation fixtures consistent with the new required input; it introduces no new example,
+module, Ansible role, DNS abstraction or orchestration, and leaves the separate LXC contract
+unchanged.
 
 The input is `dns_search_domain`: a required, non-null string with no default, containing one
 ASCII DNS name. Labels are 1–63 letters/digits or inner hyphens, separated by dots; the complete

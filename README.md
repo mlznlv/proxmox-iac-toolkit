@@ -20,7 +20,7 @@ To work on the toolkit itself, follow [Contributing](CONTRIBUTING.md).
 
 | Component | Purpose |
 | --- | --- |
-| [Linux VM](tofu/modules/proxmox-linux-vm/README.md) | Full clone of a cloud-init template; static/DHCP IPv4, optional static IPv6 and additional attachments |
+| [Linux VM](tofu/modules/proxmox-linux-vm/README.md) | Full clone of a cloud-init template; static/DHCP IPv4, optional static IPv6, additional attachments and a required DNS search domain |
 | [Linux container](tofu/modules/proxmox-linux-container/README.md) | Unprivileged Debian LXC, one static IPv4 interface |
 | [QEMU guest agent](ansible/roles/qemu_guest_agent/README.md) | Install and start the agent inside a suitable VM |
 | [Separate consumer repository](examples/separate-consumer-repository/README.md) | Compose the VM and role from one pinned checkout |
