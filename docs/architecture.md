@@ -191,9 +191,9 @@ and requalification.
 ## VM DNS search domain
 
 [ADR 0019](decisions/0019-explicit-vm-dns-search-domain.md) requires an explicit consumer-owned
-search domain as a breaking addition to the existing VM bootstrap interface. The VM module
-implements it as the required `dns_search_domain` input, delivered by
-[#135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135).
+search domain as a breaking addition to the existing VM bootstrap interface.
+[#135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135) implements it as the VM module's
+required `dns_search_domain` input.
 
 The contract belongs in the existing VM module and resource. Its required input, fictional
 domain example, breaking adoption guidance and cloud-init/FQDN/reboot warnings belong in the

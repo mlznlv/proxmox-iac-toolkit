@@ -76,13 +76,17 @@ records CLI/provider identities and each case. Earlier unmodified source
 | 1.6.0, 1.9.4 | Failed identifier/VLAN guards | Passed baseline |
 | 1.10.0, 1.12.6 | Passed baseline | Passed baseline |
 
-The [baseline investigation](https://github.com/mlznlv/proxmox-iac-toolkit/issues/120#issuecomment-6233199326)
+The [baseline
+investigation](https://github.com/mlznlv/proxmox-iac-toolkit/issues/120#issuecomment-6233199326)
 distinguishes unchanged-source checks from scratch-patched diagnostics. All results are sampled
 behavior at recorded identities, not full-feature or interval-wide qualification.
 [Contributing](../CONTRIBUTING.md#module-consumption-compatibility-evidence) owns the procedure;
-contributor-pin mocks do not establish the minimum or provider/guest runtime behavior. Provider
-signing evidence is recorded separately in [#111](https://github.com/mlznlv/proxmox-iac-toolkit/issues/111);
-a CLI warning difference does not resolve signing.
+contributor-pin mocks do not establish the minimum or provider/guest runtime behavior. The
+expired provider signing key of [#111](https://github.com/mlznlv/proxmox-iac-toolkit/issues/111)
+was fixed upstream by renewing the same key, so the locked v0.111.1 now installs without the
+expired-key warning with the committed locks unchanged; [the remediation
+record](https://github.com/mlznlv/proxmox-iac-toolkit/issues/111#issuecomment-6233138082) gives
+the signing provenance and acquisition runs.
 
 ## Provider lifecycle evidence
 
