@@ -84,6 +84,17 @@ state, plans, logs or decrypted artifacts may be published. [ADR
 0004](decisions/0004-local-validation-task-ci-security-boundary.md) records these decisions;
 [Compatibility](compatibility.md) owns evidence claims.
 
+Module consumption compatibility is separate from the contributor toolchain and test-runner
+prerequisites, as recorded in [ADR
+0016](decisions/0016-module-cli-minimum-and-evidence-policy.md). A module's declared minimum
+requires evidence from its final unmodified source through a consuming root; passing the
+repository's mock suite on the contributor pin does not establish that minimum. Known failures
+remain visible until corrected and rechecked.
+[Compatibility](compatibility.md#opentofu-cli-compatibility-and-evidence) records the current
+target and evidence;
+[Contributing](../CONTRIBUTING.md#module-consumption-compatibility-evidence) defines the
+evidence procedure.
+
 Live infrastructure testing is defined separately, by the [isolated live-validation
 path](#isolated-live-validation), and must not become a dependency of normal public CI.
 Toolkit-owned live testing must be isolated from normal public CI, explicitly opt-in, and

@@ -51,7 +51,9 @@ module "fictional_vm" {
 }
 ```
 
-Values are fictional. Supply provider/backend configuration, then follow the [reviewed-plan
+Values are fictional or reserved for documentation;
+[Security](../../../SECURITY.md#publication-boundary) names the reserved ranges. Supply
+provider/backend configuration, then follow the [reviewed-plan
 workflow](../../../docs/using.md#workflow).
 
 ## Inputs
@@ -198,11 +200,11 @@ requiring provider/Architecture review.
 | Change | Contract and consequence |
 | --- | --- |
 | Add/change/remove a VLAN; change an additional attachment's `bridge` | In-place; running link detaches/re-attaches and interrupts connectivity |
-| Append an additional attachment | In-place; new device; existing slots/primary MAC preserved |
+| Append an additional attachment | In-place; new device; existing slots/primary MAC preserved; an addressed one also has the initialization consequences below |
 | Change or first declare a MAC | In-place VM update; old device is unplugged and a different one appears; old reservations stop matching |
 | Remove a MAC declaration | Retains the current address; no change. Case-only edits can still plan a device change |
-| Add/change an attachment address; switch static/DHCP | In-place; initialization consequences below |
-| Add/change/remove primary IPv6 or change DNS | In-place; initialization consequences below |
+| Add/change an attachment address, including the primary's own; switch static/DHCP | In-place, with only `ipconfig0` changing for a mode switch; initialization consequences below |
+| Add/change/remove primary IPv6 or change DNS | In-place, with only `initialization` changing for an IPv6-only change; initialization consequences below |
 | Change only connection host/port | Output only; no infrastructure change |
 | Change source template | Replacement destroys the VM and its disks |
 
@@ -259,8 +261,9 @@ guest network management, HA or pools are included. Continuing packages, users, 
 configuration belong to the consumer. For containers use the [separate
 module](../proxmox-linux-container/README.md).
 
-[`tests/`](tests) checks declarations and invalid inputs with a mocked provider;
-[`versions.tf`](versions.tf) and the repository lock govern those checks.
+[`tests/`](tests) checks declarations and invalid inputs with a mocked provider. Those checks
+run on the contributor OpenTofu pin in `.tool-versions`, not at this module's consumer minimum,
+and the repository lock fixes their provider build.
 [Contributing](../../../CONTRIBUTING.md#validate-your-change) owns commands and required
 evidence; [Compatibility](../../../docs/compatibility.md#current-evidence-level) owns what has
 been established. The module lock does not constrain your root lock.

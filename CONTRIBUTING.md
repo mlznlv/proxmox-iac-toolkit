@@ -96,7 +96,11 @@ patched diagnostics or a baseline on another CLI cannot establish its minimum, a
 mock suite need not run on it. Full validation on the contributor pin and separately specified
 older-version checks still apply. A test-runner feature's syntax prerequisite neither raises the
 consumer minimum nor qualifies the whole suite on every later CLI. This procedure introduces no
-permanent version matrix.
+permanent version matrix. [ADR
+0016](docs/decisions/0016-module-cli-minimum-and-evidence-policy.md) records why consumption
+evidence is separate from contributor validation, and
+[Compatibility](docs/compatibility.md#opentofu-cli-compatibility-and-evidence) records the
+results.
 
 ### Live validation
 
@@ -155,10 +159,10 @@ convention](docs/decisions/README.md#convention).
 
 ## Component evidence requirements
 
-Implementation acceptance requires credential-free module/static checks and, where lifecycle is
-claimed, separate evidence from the exact locked provider. Architecture acceptance can precede
-finished implementation tests; it cannot turn mocked declarations into lifecycle or runtime
-evidence.
+Before implementation receives an Architecture `ACCEPT` verdict, its pull request records
+credential-free module/static checks and, where lifecycle is claimed, separate evidence from the
+exact locked provider. Architecture acceptance can precede finished implementation tests; it
+cannot turn mocked declarations into lifecycle or runtime evidence.
 
 | Component/change | Required contract coverage |
 | --- | --- |
@@ -177,6 +181,9 @@ planning using source-grounded read-back for supported VM updates. Keep unsuppor
 retirement/shrink/nesting counterexamples visible. LXC evidence includes creation flags, ignored
 key changes versus native replacement, size-only growth, reboot distinctions, and
 explicit-domain create/update/read without node fallback. Provider upgrades repeat the
-applicable gates; a constraint alone is not evidence. Records distinguish executed plans,
-modeled state, source inspection and live work not obtained. No permanent test mechanism is
-mandated.
+applicable gates; a constraint alone is not evidence. Each record identifies the provider build
+and source revision where applicable, what was inspected or executed and why it establishes the
+claim, and distinguishes executed plans, modeled state, source inspection, upstream tests merely
+inspected and live work not obtained. A credential-free real-provider plan, pinned provider
+schema and implementation inspection, enabled upstream tests or equivalent Architecture-reviewed
+evidence may satisfy a gate; no permanent test mechanism is mandated.

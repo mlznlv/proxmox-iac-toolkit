@@ -39,8 +39,9 @@ module "fictional_container" {
 }
 ```
 
-Values are fictional. Establish the pinned checkout and follow the [reviewed-plan
-workflow](../../../docs/using.md#workflow).
+Values are fictional or reserved for documentation;
+[Security](../../../SECURITY.md#publication-boundary) names the reserved ranges. Establish the
+pinned checkout and follow the [reviewed-plan workflow](../../../docs/using.md#workflow).
 
 ## Inputs
 
@@ -70,10 +71,10 @@ Optional:
 | `nesting_enabled` | `bool` | `true` | Whether to enable the Proxmox nesting feature when the container is created. See [Nesting](#nesting). |
 | `ssh_port` | `number` | `22` | Port published in the `connection` output. Metadata only. |
 
-[`variables.tf`](variables.tf) validates locally decidable name, size, identifier, IPv4 and key
-syntax before apply. IPv4 uses plain dotted decimal without leading-zero octets; keys are
-trimmed single OpenSSH public-key lines. The 64-character hostname limit comes from LXC's
-`lxc.uts.name` start limit.
+[`variables.tf`](variables.tf) validates locally decidable name, size, identifier, IPv4, DNS
+server, search-domain and key syntax before apply. IPv4 uses plain dotted decimal without
+leading-zero octets; keys are trimmed single OpenSSH public-key lines. The 64-character hostname
+limit comes from LXC's `lxc.uts.name` start limit.
 
 Both DNS servers and a single nonempty search domain are required, passed unchanged and never
 derived from the hostname. Proxmox independently inherits each from the node when omitted. Empty
@@ -123,7 +124,7 @@ source, not live observations; see
 A matching assigned/supplied identifier, or removing its declaration while retaining that
 identifier, is not a change. Address/name updates change their corresponding outputs.
 No-reboot-request is not an availability guarantee. Unexpected replacement for an update is a
-stop condition for provider review.
+stop condition pending provider and Architecture review.
 
 Bootstrap keys are creation-only: the provider otherwise forces replacement on key changes, so
 the module ignores this single attribute after creation. Rotate root's `authorized_keys` through

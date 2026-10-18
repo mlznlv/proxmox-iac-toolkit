@@ -9,9 +9,12 @@ consumers. [Architecture](docs/architecture.md) defines that ownership, and [ADR
 
 Never publish credentials, private keys or decryption identities, real inventory, private
 hostnames/addresses/identifiers, topology, generated state, sensitive plans or logs, or real
-encrypted secrets and their recipients. Use fictional or standards-reserved values in examples
-and reports. `.gitignore`, hooks and publication/secret checks catch obvious cases; review the
-content too.
+encrypted secrets and their recipients. Use fictional or documentation-reserved values in
+examples and reports: [RFC 5737](https://www.rfc-editor.org/info/rfc5737/) IPv4 addresses, [RFC
+3849](https://www.rfc-editor.org/info/rfc3849/) IPv6 addresses, [RFC
+2606](https://www.rfc-editor.org/info/rfc2606/) domain names and the [RFC
+7042](https://www.rfc-editor.org/info/rfc7042/) documentation MAC range. `.gitignore`, hooks and
+publication/secret checks catch obvious cases; review the content too.
 
 Consumers may commit ciphertext and recipient lists to their own repositories. Decryption
 identities stay outside **all** source control, on systems that need them, distributed through

@@ -54,6 +54,8 @@ a CLI warning difference does not resolve signing.
 ## Provider lifecycle evidence
 
 The reviewed build is `bpg/proxmox` v0.111.1, source `b22fe919fc34476b232191b69c8907f0c1aa5bea`.
+The provider constraint is deliberately narrow: `bpg/proxmox` is pre-1.0, so a minor release may
+change behavior, and adopting one is a compatibility decision rather than an automatic upgrade.
 Repository locks pin validation; consumers select their own root locks. A merely allowed build
 acquires no evidence. The component READMEs own supported transitions and disruption/destruction
 rules.
@@ -117,8 +119,8 @@ requirement is introduced.
 No public check establishes live provisioning, clone/start/update/destroy,
 shutdown/reboot/backup, cloud-init, host-key behavior, SSH/privilege escalation, agent
 operation, Ansible convergence/idempotency, VLAN/routing, DHCP lease or naming, IPv6/RA, LXC
-setup/nesting/DNS, checkout acquisition or a consumer's connectivity. Static/mocked evidence
-must never be called runtime validation.
+setup/nesting/DNS, checkout acquisition, a consumer's connectivity or compatibility with a live
+consumer environment. Static/mocked evidence must never be called runtime validation.
 
 A distribution or platform becomes a runtime-validated reference platform only after a [live
 run](#live-integration-evidence) exercises it to the level claimed and this contract records

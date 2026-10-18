@@ -1,5 +1,5 @@
 name: Architecture change
-description: Record an Architecture-owned change to the roadmap, architecture, repository design, or decisions.
+description: Record an Architecture-owned change to the roadmap, architecture, repository layout, or decisions.
 title: "[Architecture]: "
 body:
   - type: markdown
