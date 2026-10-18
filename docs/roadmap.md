@@ -4,7 +4,7 @@
 
 - **Current phase:** M7 — Reusable guest and service configuration
 - **Milestone state:** M1 through M6 are complete. M6 delivered VLAN [#85](https://github.com/mlznlv/proxmox-iac-toolkit/issues/85), ordered additional attachments [#98](https://github.com/mlznlv/proxmox-iac-toolkit/issues/98), primary-attachment DHCP [#100](https://github.com/mlznlv/proxmox-iac-toolkit/issues/100), static IPv6 [#101](https://github.com/mlznlv/proxmox-iac-toolkit/issues/101) and an explicit consumer-owned VM DNS search domain [#132](https://github.com/mlznlv/proxmox-iac-toolkit/issues/132) under ADRs 0009, 0012–0014 and [0019](decisions/0019-explicit-vm-dns-search-domain.md), and LXC [#99](https://github.com/mlznlv/proxmox-iac-toolkit/issues/99) under [ADR 0015](decisions/0015-first-lxc-lifecycle-and-dns-contract.md). Retrospective Architecture audits in [#119](https://github.com/mlznlv/proxmox-iac-toolkit/issues/119) accept the DHCP and LXC merges, and correction [#112](https://github.com/mlznlv/proxmox-iac-toolkit/issues/112) recorded the consumption-minimum evidence [ADR 0016](decisions/0016-module-cli-minimum-and-evidence-policy.md) requires.
-- **Implementation state:** No M7 Developer work is Ready. Corrective [#133](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133), through [PR #134](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134), remains separate from milestone state.
+- **Implementation state:** No M7 Developer work is Ready. Corrective [#133](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133) merged through [PR #134](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134), outside milestone state.
 - **Current blocker:** M7 entry criteria are not met. No recurring guest-configuration needs have been demonstrated by an actual consumer, and Architecture has not accepted boundaries for any guest or service capability; [#104](https://github.com/mlznlv/proxmox-iac-toolkit/issues/104) tracks both. Additional VM data disks remain independently blocked in [#80](https://github.com/mlznlv/proxmox-iac-toolkit/issues/80).
 - **Next action:** Gather sanitized recurring guest-configuration needs from an actual consumer for #104. Architecture then selects the smallest useful M7 capability and records only the boundaries and evidence requirements PO needs to create focused Developer Issues.
 
@@ -295,7 +295,7 @@ This is Architecture-owned and is not a Developer implementation ticket.
 
 ## Near-term Developer work
 
-No Developer work is Ready. M7 implementation begins only after [#104](https://github.com/mlznlv/proxmox-iac-toolkit/issues/104) has demonstrated consumer needs and Architecture accepts the selected guest and service boundaries. [#133](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133) remains separate corrective work through [PR #134](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134). Issue-level specifications and execution state live in GitHub.
+No Developer work is Ready. M7 implementation begins only after [#104](https://github.com/mlznlv/proxmox-iac-toolkit/issues/104) has demonstrated consumer needs and Architecture accepts the selected guest and service boundaries. Issue-level specifications and execution state live in GitHub.
 
 ## Deferred from current execution
 
