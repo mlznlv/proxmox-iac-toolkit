@@ -36,11 +36,11 @@ same files. Contributor pins are not a release compatibility or support statemen
 not change [module consumption
 requirements](docs/compatibility.md#opentofu-cli-compatibility-and-evidence).
 
-The container definition mounts only the workspace, adds no privileges, capabilities,
-credentials, identities, private inventory or dotfiles, and configures no deployment access. Its
-default network is controlled by the host runtime and may reach the host network: it is not a
-network-isolation guarantee. Editor-provided SSH-agent forwarding or Git configuration is the
-contributor's choice, outside this definition.
+The container definition mounts only the workspace, adds no container features, privileges,
+capabilities, credentials, identities, private inventory or dotfiles, and configures no
+deployment access. Its default network is controlled by the host runtime and may reach the host
+network: it is not a network-isolation guarantee. Editor-provided SSH-agent forwarding or Git
+configuration is the contributor's choice, outside this definition.
 
 ## Validate your change
 
@@ -159,10 +159,12 @@ convention](docs/decisions/README.md#convention).
 
 ## Component evidence requirements
 
-Before implementation receives an Architecture `ACCEPT` verdict, its pull request records
-credential-free module/static checks and, where lifecycle is claimed, separate evidence from the
-exact locked provider. Architecture acceptance can precede finished implementation tests; it
-cannot turn mocked declarations into lifecycle or runtime evidence.
+Accepting a capability's Architecture does not require finished module tests. Before its
+implementation receives an Architecture `ACCEPT` verdict, the pull request records the
+provider-level evidence below for the exact locked `bpg/proxmox` build. Developer acceptance
+separately requires the implementation, its README, the credential-free module/static checks in
+this table and that provider evidence to agree. Neither acceptance turns mocked declarations
+into lifecycle or runtime evidence.
 
 | Component/change | Required contract coverage |
 | --- | --- |

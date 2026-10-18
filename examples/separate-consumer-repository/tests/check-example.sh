@@ -17,8 +17,8 @@
 # nothing here verifies otherwise.
 #
 # Every command is printed before it runs, and each is one a reader can run by
-# hand after making that directory themselves. CONTRIBUTING.md documents
-# them.
+# hand after making that directory themselves. This script is their reference;
+# the validate:example task in Taskfile.yml runs it.
 #
 # What this proves: the example parses, its module call type-checks against the
 # module's real interface, its committed inventory is the connection output

@@ -60,9 +60,10 @@ omission is not a local-state recommendation.
 
 The initial workflow commits no encrypted secret document and adds no secret loader, broker or
 decryption orchestration. SOPS and age remain the interface when a supported workflow needs
-version-controlled ciphertext. Runtime credentials stay outside Git;
-[Security](../SECURITY.md#publication-boundary) defines ciphertext, recipient and private-key
-handling.
+version-controlled ciphertext, deferred rather than rejected, as [ADR
+0007](decisions/0007-single-revision-consumer-contract.md) records. Runtime credentials stay
+outside Git; [Security](../SECURITY.md#publication-boundary) defines ciphertext, recipient and
+private-key handling.
 
 ## Upgrading
 
@@ -79,7 +80,10 @@ what to decide and what the plan will then show.
 
 ## Moving from `homelab-iac-toolkit`
 
-The rename to `proxmox-iac-toolkit` preserved commits and tags; keep your SHA.
+The rename to `proxmox-iac-toolkit` preserved commits and tags; keep your SHA. GitHub
+[redirects Git operations on the old address](https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository),
+but that redirect is GitHub's rather than something this toolkit provides, so update the places
+that name it:
 
 - Update a clone with `git remote set-url origin https://github.com/mlznlv/proxmox-iac-toolkit.git`.
 - For a submodule, use `git submodule set-url <checkout> https://github.com/mlznlv/proxmox-iac-toolkit.git`

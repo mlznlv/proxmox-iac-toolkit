@@ -19,12 +19,12 @@ Existing release-series targets retain their prior wording/evidence until their 
 requalification trigger; they do not cover an unevaluated release. Other Debian-family guests
 may meet a role contract without gaining a toolkit claim. The supported PVE major does not
 float: adopting another requires deliberate compatibility review, validation and declaration
-updates; a changed durable policy requires an ADR.
+updates; a changed durable policy or another architectural decision requires an ADR.
 
 ## OpenTofu CLI compatibility and evidence
 
 [ADR 0016](decisions/0016-module-cli-minimum-and-evidence-policy.md) retains 1.6.0 as the
-consumer minimum for both modules.
+intended consumer minimum for both modules.
 
 **The VM source with trimmed SSH keys meets its declared minimum in the checks run.** The VM
 module of [#134](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134), which adds the key
@@ -64,7 +64,7 @@ and 1.9.4 with unmodified source, fictional inputs and its committed provider lo
 | Corrected VM check | Recorded result on both CLIs |
 | --- | --- |
 | Initialization and validation with nullable defaults | Passed, including `vm_id` and `network_vlan_id` |
-| Address, gateway, DNS and SSH-key rules | Accepted valid boundaries; rejected #112 cases and adjacent octet/prefix failures with module messages |
+| Address, gateway, DNS and SSH-key rules | Accepted valid boundaries; rejected [#112](https://github.com/mlznlv/proxmox-iac-toolkit/issues/112) cases and adjacent octet/prefix failures with module messages |
 | Refresh-disabled plans against fictional unreachable endpoint | DHCP, static IPv6, mixed-family DNS, additional attachment and connection host passed; static/DHCP and duplicate-address preconditions rejected invalid cases |
 
 The [correction evidence](https://github.com/mlznlv/proxmox-iac-toolkit/pull/123#issuecomment-6236986003)
@@ -81,10 +81,13 @@ investigation](https://github.com/mlznlv/proxmox-iac-toolkit/issues/120#issuecom
 distinguishes unchanged-source checks from scratch-patched diagnostics. All results are sampled
 behavior at recorded identities, not full-feature or interval-wide qualification.
 [Contributing](../CONTRIBUTING.md#module-consumption-compatibility-evidence) owns the procedure;
-contributor-pin mocks do not establish the minimum or provider/guest runtime behavior. The
-expired provider signing key of [#111](https://github.com/mlznlv/proxmox-iac-toolkit/issues/111)
-was fixed upstream by renewing the same key, so the locked v0.111.1 now installs without the
-expired-key warning with the committed locks unchanged; [the remediation
+contributor-pin mocks do not establish the minimum or provider/guest runtime behavior. CLI
+evidence does not expand provider lifecycle or runtime claims. It qualifies only the behavior
+actually exercised at the recorded source, CLI and provider identities, not every version
+allowed by a constraint or future releases. The expired provider signing key of
+[#111](https://github.com/mlznlv/proxmox-iac-toolkit/issues/111) was fixed upstream by renewing
+the same key, so the locked v0.111.1 now installs without the expired-key warning with the
+committed locks unchanged; [the remediation
 record](https://github.com/mlznlv/proxmox-iac-toolkit/issues/111#issuecomment-6233138082) gives
 the signing provenance and acquisition runs.
 
@@ -100,7 +103,7 @@ rules.
 | Capability | Evidence source | What was established |
 | --- | --- | --- |
 | Agent channel | [ADR 0006](decisions/0006-guest-agent-channel-at-creation.md) | Pinned Proxmox/packaging/provider source; channel/wait separation |
-| VLAN | [ADR 0009](decisions/0009-first-m6-vlan-expansion.md), VM README history | Schema/source and refresh-disabled exact-build plans for add/change/remove |
+| VLAN | [ADR 0009](decisions/0009-first-m6-vlan-expansion.md), [PR #90](https://github.com/mlznlv/proxmox-iac-toolkit/pull/90) | Schema/source and refresh-disabled exact-build plans for add/change/remove |
 | Additional attachments | [PR #102](https://github.com/mlznlv/proxmox-iac-toolkit/pull/102), [ADR 0014](decisions/0014-additional-attachment-retirement-lifecycle.md) | Synthetic-state plans, source-grounded modeled read-back, supported updates and retained-entry counterexamples |
 | DHCP/primary MAC | [PR #114](https://github.com/mlznlv/proxmox-iac-toolkit/pull/114), [ADR 0012](decisions/0012-dhcp-primary-attachment-addressing.md) | Mode/MAC mapping, in-place plans and modeled subsequent no-change plans |
 | Static IPv6 | [PR #113](https://github.com/mlznlv/proxmox-iac-toolkit/pull/113), [ADR 0013](decisions/0013-static-ipv6-primary-attachment.md) | Add/change/remove plans and modeled convergence across IPv4 modes; pinned cloud-init renderer source |
@@ -237,10 +240,11 @@ at a changed identity is recorded.
 
 [ADR 0017](decisions/0017-guest-distribution-extension-and-qualification.md) owns why tracks and
 expansion gates are separate. **Not targeted** is the default; **expected-compatible** requires
-applicable static/mocked, exact-provider and pinned guest-source evidence; **runtime-validated**
-requires recorded guest execution through an accepted isolated live path. Consumer runs may
-demonstrate need but are not toolkit runtime evidence. Support does not transfer between VM
-templates, LXC, individual roles or their composition.
+applicable static/mocked, exact-provider and pinned guest-source evidence for the exact identity
+recorded, and is never described as validated; **runtime-validated** requires recorded guest
+execution through an accepted isolated live path. Consumer runs may demonstrate need but are not
+toolkit runtime evidence. Support does not transfer between VM templates, LXC, individual roles
+or their composition.
 
 | Track | Required qualification inputs |
 | --- | --- |

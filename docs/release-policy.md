@@ -15,15 +15,15 @@ The release states the exact full SHA used by the [consumer
 checkout](using.md#one-checkout-one-commit). Enable [GitHub release
 immutability](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)
 before publication. GitHub-generated provenance/attestation binds the tag, commit and assets; no
-custom signing infrastructure is required.
+custom signing system, attestation infrastructure or binary provenance work is introduced.
 
 ## Maturity
 
 This is an evaluation/early-consumer pre-release. Source identity is immutable; interfaces may
 break before 1.0. There is no support-duration, maintenance-line, LTS, response-time,
-release-cadence or 1.0 commitment. Later releases receive new SemVer identifiers when needed.
-Release publication does not strengthen the [compatibility evidence](compatibility.md) at that
-source snapshot.
+release-cadence or 1.0 commitment. Later releases require new SemVer identifiers. Release
+publication does not strengthen the [compatibility evidence](compatibility.md) at that source
+snapshot.
 
 ## Changelog and migration
 
@@ -42,7 +42,7 @@ mutation, unattended infrastructure changes or hidden configuration rewrites.
 
 ## Candidate gate
 
-Before drafting, record in a durable release issue:
+Before drafting, record in the durable completion record the PO selects:
 
 1. One exact full SHA reachable from `main`, containing complete release docs,
    the correctly dated changelog, compatibility snapshot, maturity, upgrade and
@@ -66,7 +66,7 @@ workflow](https://docs.github.com/en/repositories/releasing-projects-on-github/m
 
 After publication verify pre-release and immutability flags, the tag and notes' exact SHA,
 snapshot links, absence of custom assets and expected GitHub provenance/attestation. Record the
-release URL and final evidence in the issue.
+release URL and final evidence in that record.
 
 ## Corrections and security
 

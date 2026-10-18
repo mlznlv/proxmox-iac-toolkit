@@ -40,10 +40,12 @@ complete handoff and invocation.
 ## Interface and lifecycle
 
 There are no role variables, handlers or templates. The package is present and the service
-running; boot-enabling is honored only where packaging supports it. On device-activated static
-units, `systemctl is-enabled` reports `static`, Ansible treats that as already enabled and udev
-starts the service when its device appears. There is no guest-side enablement configuration to
-add for such a unit.
+running; boot-enabling is honored only where packaging supports it. On the expected-compatible
+Debian Stable and Kali Rolling targets the unit is device-activated and ships an empty
+`[Install]` section, so `systemctl is-enabled` reports `static`, Ansible treats that as already
+enabled and udev starts the service when its device appears. There is no guest-side enablement
+configuration to add for such a unit. Where packaging does ship an `[Install]` section, the same
+task enables the unit for boot.
 
 ## Limitations and validation
 
