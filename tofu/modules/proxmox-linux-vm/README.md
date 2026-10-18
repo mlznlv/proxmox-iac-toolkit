@@ -24,6 +24,7 @@ You supply, and continue to own:
 - if you add network attachments, their bridges and networks, allocating their addresses, and any routing between them;
 - if you choose DHCP, the DHCP service with its scopes, reservations, and leases, and a connection host that keeps reaching the guest;
 - if you declare IPv6, the prefix it comes from and everything that makes it work: address uniqueness, routing, router advertisements, upstream IPv6 service, and a gateway that belongs on that network;
+- the DNS search domain you declare, the namespace and DNS service behind it, and a domain that fits with the VM's name;
 - the private half of the SSH keys you authorize.
 
 ## Usage
@@ -44,13 +45,14 @@ module "fictional_vm" {
   ipv4_address_cidr = "192.0.2.10/24"
   ipv4_gateway      = "192.0.2.1"
   dns_servers       = ["192.0.2.53"]
+  dns_search_domain = "example.invalid"
 
   username        = "fictional"
   ssh_public_keys = [trimspace(file(pathexpand("~/.ssh/id_ed25519.pub")))]
 }
 ```
 
-Every value above is fictional or reserved for documentation: the addresses come from [RFC 5737](https://www.rfc-editor.org/info/rfc5737/) and name nothing real. Pin `ref` to a commit or tag; this project has not published a release yet.
+Every value above is fictional or reserved for documentation: the addresses come from [RFC 5737](https://www.rfc-editor.org/info/rfc5737/) and the domain from [RFC 2606](https://www.rfc-editor.org/info/rfc2606/), and none of them names anything real. Pin `ref` to a commit or tag; this project has not published a release yet.
 
 ## Inputs
 
@@ -68,6 +70,7 @@ Required:
 | `ipv4_address_cidr` | `string` | Static IPv4 address in dotted decimal with a prefix length from 8 to 32, such as `192.0.2.10/24`. Required in static mode, the default; must be null with [DHCP](#dhcp-addressing). |
 | `ipv4_gateway` | `string` | IPv4 default gateway in dotted decimal, without a prefix length. Required in static mode; must be null with DHCP. |
 | `dns_servers` | `list(string)` | IPv4 or IPv6 DNS servers, in order of preference. At least one. |
+| `dns_search_domain` | `string` | DNS search domain for the guest: one DNS name, such as `example.invalid`, without a trailing dot. There is no default and no value for no search domain. See [DNS search domain](#dns-search-domain). |
 | `username` | `string` | Bootstrap account cloud-init creates. |
 | `ssh_public_keys` | `list(string)` | OpenSSH **public** keys authorized for that account. At least one, each a single key on one line; a trailing newline is allowed. Each key is sent without its surrounding whitespace, the form the provider reads back, so a key read with `file()` does not plan a change on every run. |
 
@@ -87,7 +90,7 @@ Optional:
 | `ipv6_address_cidr` | `string` | `null` | Static IPv6 address with a prefix length from `8` to `128`, such as `2001:db8::10/64`, added to the primary attachment beside its IPv4 addressing. Null declares no IPv6. See [Static IPv6](#static-ipv6). |
 | `ipv6_gateway` | `string` | `null` | IPv6 default gateway, global or link-local, without a prefix length. Needs `ipv6_address_cidr`. |
 
-Values that can be judged without contacting Proxmox are checked when you plan, not when Proxmox rejects them: an address without a prefix length, an IPv6 address in an IPv4 input or an IPv4 one in an IPv6 input, an IPv4 address, gateway, or DNS server with an octet written with a leading zero, an IPv4 prefix length outside `8` to `32`, a gateway carrying a prefix, an IPv6 gateway without an IPv6 address, an IPv6 prefix length outside `8` to `128`, Proxmox's non-address IPv6 forms `auto`, `dhcp`, and `manual`, a DNS server that is not an IPv4 or IPv6 address, an empty key list, an entry that is not one OpenSSH public key on one line, an identifier outside Proxmox's range, a VLAN tag that is not a whole number from `1` to `4094`, more than eight network attachments, a null in place of the attachment list, an additional address that is not dotted-decimal IPv4, the same IPv4 address on two attachments, a MAC address that is malformed or multicast, the same MAC address declared on two attachments, an addressing mode other than `static` or `dhcp`, a static configuration missing its address or gateway, a DHCP configuration that declares either or supplies no connection host, a connection host that is not a hostname or a plainly written IP address, and so on.
+Values that can be judged without contacting Proxmox are checked when you plan, not when Proxmox rejects them: an address without a prefix length, an IPv6 address in an IPv4 input or an IPv4 one in an IPv6 input, an IPv4 address, gateway, or DNS server with an octet written with a leading zero, an IPv4 prefix length outside `8` to `32`, a gateway carrying a prefix, an IPv6 gateway without an IPv6 address, an IPv6 prefix length outside `8` to `128`, Proxmox's non-address IPv6 forms `auto`, `dhcp`, and `manual`, a DNS server that is not an IPv4 or IPv6 address, a DNS search domain that is null, empty, or contains whitespace, ends with a dot, is longer than 253 characters, has a label longer than 63 characters or one that is not letters, digits, and inner hyphens, or names more than one domain, a name and search domain longer than 253 characters together, an empty key list, an entry that is not one OpenSSH public key on one line, an identifier outside Proxmox's range, a VLAN tag that is not a whole number from `1` to `4094`, more than eight network attachments, a null in place of the attachment list, an additional address that is not dotted-decimal IPv4, the same IPv4 address on two attachments, a MAC address that is malformed or multicast, the same MAC address declared on two attachments, an addressing mode other than `static` or `dhcp`, a static configuration missing its address or gateway, a DHCP configuration that declares either or supplies no connection host, a connection host that is not a hostname or a plainly written IP address, and so on.
 
 ## Outputs
 
@@ -367,6 +370,51 @@ Read the plan before you apply. An IPv6-only change shows the VM as `update in-p
 
 That in-place behaviour is evidenced for the provider build this repository locks, `bpg/proxmox` v0.111.1, at provider level: its schema and source, and credential-free plans made with that build for adding IPv6 with and without a gateway, changing the address, prefix length, and gateway, adding and removing the gateway, and removing IPv6; for adding, changing, and removing it in DHCP mode and beside an additional attachment, whose configuration stayed as it was; and for switching the IPv4 mode with IPv6 declared. Each was followed by a plan from the state the provider's read would record afterwards, which showed no further change. It has not been observed against a real Proxmox VE, and nothing here shows that a guest configures the address, that the gateway or any route works, that the guest is reachable over IPv6, or that it has no other IPv6 addresses. [Compatibility](../../../docs/compatibility.md#static-ipv6-addressing) records that boundary, and that your own root module's lock decides which provider build you run.
 
+## DNS search domain
+
+`dns_search_domain` is the search domain the guest is given, declared in the VM's cloud-init configuration exactly as you write it. It is required beside `dns_servers`, and it has no default: the domain, the namespace it names, and the DNS service behind it are yours, and the module will not choose one for you.
+
+```hcl
+module "fictional_vm" {
+  # ...the other inputs shown in Usage...
+
+  dns_servers       = ["192.0.2.53"]
+  dns_search_domain = "example.invalid"
+}
+```
+
+The name is reserved by [RFC 2606](https://www.rfc-editor.org/info/rfc2606/) and names nothing real.
+
+It takes one DNS name: labels of ASCII letters, digits, and inner hyphens, each at most 63 characters, separated by dots, at most 253 characters in all, and with no trailing dot. A single label, such as `test`, is accepted. A null, an empty value, whitespace anywhere, a list of domains in any form, and `.` alone are rejected when you plan, each with a message naming the rule, and there is no value that asks for no search domain.
+
+**A template's or node's search domain no longer applies.** Without a declaration, a clone keeps whatever search domain its template has, and Proxmox gives a VM that has none the search domain of the node it runs on, even though the DNS servers are yours. Declaring one makes the domain yours in both cases. [ADR 0019](../../../docs/decisions/0019-explicit-vm-dns-search-domain.md) records why.
+
+**Proxmox also uses it to name the guest.** It joins the VM's `name` and the search domain into the guest's fully qualified name, `name.domain`. The two together must fit in 253 characters, and a combination that does not is rejected when you plan, even when each is valid alone. `name` stays one DNS label: the search domain does not let you write a qualified name there. The `connection` output never has the domain appended; publish a name through [`connection_host`](#the-connection-host) if you want one.
+
+### Declaring or changing the domain on an existing VM
+
+**This input is a breaking addition.** A configuration written for a revision without it stops at `Missing required argument` until it declares one. Before you move your pin to a revision that has it, choose a domain and add it to every call of this module. Nothing discovers the domain a VM has now, carries it over, or rewrites your configuration. If you want to keep the domain a VM uses today, look it up in its template's or node's configuration and declare it; that is a choice you make, not a default.
+
+Declaring a search domain on a VM created without one, or changing it to another, updates the VM in place; it does not replace it. With the provider build this repository locks, the plan changes only the search domain in the VM's cloud-init configuration, and once that update is applied the next plan proposes nothing. That holds whether the VM had no search domain of its own or one its template gave it. Declaring the domain the template already gave it plans no change at all.
+
+It is still disruptive, as any change to the cloud-init configuration is. It rebuilds the cloud-init drive and reboots a running VM, and the changed data makes the next boot a new cloud-init instance. Cloud-init re-applies its configuration and, unless your template's configuration says otherwise, deletes and regenerates the guest's SSH host keys, so expect a host-key warning and connections to drop. This module offers no way to make the change without that disruption. The guest's fully qualified name can change too, even when the domain does not seem to: a VM that took the node's search domain was named without one, so declaring that same domain gives it `name.domain` for the first time.
+
+Read the plan before you apply it, and apply it explicitly. Declaring or changing the domain shows the VM as `update in-place`, with only the DNS `domain` in `initialization` changing. If a plan shows the VM being replaced, or anything else changing, do not apply it: that is not the behaviour this module relies on. Check which provider build your root module's lock selects, because only the build named below has been evaluated.
+
+### Removing the domain is not supported
+
+Removing the search domain, setting it empty, returning a VM to its template's or node's search domain, and running it without one are not supported, and the module refuses a null or empty value rather than asking for any of them. The locked provider leaves an empty domain out of its request instead of clearing the one Proxmox holds, and reads that one back, so such a change would never settle: every plan would propose it again. Choose a domain you mean to keep. Declaring the value a template or node supplied is an ordinary change of domain, and the VM then keeps it as declared.
+
+### Where the search-domain behaviour is evidenced
+
+All of the above is for the provider build this repository locks, `bpg/proxmox` v0.111.1, at provider level, and the evidence comes in the same three kinds as for [additional attachments](#where-this-is-evidenced).
+
+- **Plans.** Credential-free plans made with that build, with refresh disabled, against synthetic prior states: creating a VM with a declared domain, declaring one on a VM that had none and on one whose template gave it another, and changing one declared domain to another, each in static and DHCP modes and beside static IPv6 and an additional attachment.
+- **Modelled read-back.** Each was then planned again against a state modelled on the provider's read path, and proposed nothing. No apply and no refresh was run.
+- **Source.** That a clone keeps its template's search domain, that Proxmox falls back to the node's for a VM without one and joins the name and domain into the fully qualified name, that the provider sends a non-empty domain and reads it back, and that it leaves an empty one out without clearing the old, are read from the provider's and Proxmox's source.
+
+None of it has been observed against a real Proxmox VE. Nothing here shows that a guest's resolver uses the domain, that its hostname or fully qualified name changes, that the reboot succeeds, that host keys are regenerated, or that the guest is reachable afterwards. [Compatibility](../../../docs/compatibility.md#vm-dns-search-domain) records that boundary, and your root module's own lock decides which provider build you run.
+
 ## Limitations
 
 This module is one VM, cloned once, addressed as you declare. It does not do:
@@ -376,6 +424,7 @@ This module is one VM, cloned once, addressed as you declare. It does not do:
 - linked clones, or cloning from a template on another node;
 - DHCP on an additional attachment, DHCP service, scope, reservation, or name management, or discovering the address a guest was given;
 - IPv6 stateless autoconfiguration or DHCPv6, IPv6-only addressing, IPv6 on additional attachments, VLAN trunks, or more than eight network attachments;
+- more than one DNS search domain, no search domain, a search domain left to the template or node, or a qualified VM name;
 - removing, reordering, or taking the address from an additional attachment on an existing VM;
 - a gateway or routes on any attachment but the primary, NIC models, firewall, MTU, rate, queue, or link-state settings;
 - VLAN creation, bridge configuration or discovery, or network configuration inside the guest;
@@ -386,8 +435,8 @@ This module is one VM, cloned once, addressed as you declare. It does not do:
 
 Formatting, `tofu validate`, and a set of contract tests under [`tests/`](tests) that run against a **mocked** provider: no Proxmox endpoint, no credentials, nothing created. Run them with `task validate:tofu`, or directly as [Local validation](../../../docs/validation.md) describes.
 
-They prove what the module asks the provider for — one full clone of the declared template, the declared static addressing and bootstrap account, each SSH key sent without its surrounding whitespace, the guest-agent channel attached by default and absent when it is turned off, waiting for an agent-reported address disabled in both cases, `stop_on_destroy` on both settings reaching the resource, the `connection` output's derivation, the network device left untagged by default and tagged with `1` and `4094` without gaining a second device or changing the addressing or `connection` output, no additional attachment by default, additional attachments in the declared order from `net1` with their own bridge, tag, address, and MAC address, no gateway on any of them, an empty IP configuration for an addressless attachment before an addressed one and none after the last addressed one, eight attachments accepted, undeclared and distinct declared MAC addresses accepted together, `mac_addresses` in slot order, and the primary attachment and `connection` output unchanged by them, static as the default addressing mode, DHCP declared on the primary IP configuration with no address or gateway and the DNS servers kept, additional attachments left static beside it, the connection host published in either mode and the declared address otherwise, the primary MAC address absent by default and reaching `net0` as given in either mode, and reported first in `mac_addresses`, IPv6 absent by default and, when declared, its address and global or link-local gateway reaching the primary IP configuration beside the static or DHCP IPv4 one without changing the `connection` output or reaching an additional attachment, a supplied IPv6 connection host published beside it, and IPv6 DNS servers accepted beside IPv4 ones — and that bad input fails at plan time, including a null in place of the attachment list, one MAC address declared twice in either letter case, on two additional attachments or on the primary and an additional one, and every rejected combination of mode, address, gateway, and connection host.
+They prove what the module asks the provider for — one full clone of the declared template, the declared static addressing and bootstrap account, each SSH key sent without its surrounding whitespace, the guest-agent channel attached by default and absent when it is turned off, waiting for an agent-reported address disabled in both cases, `stop_on_destroy` on both settings reaching the resource, the `connection` output's derivation, the network device left untagged by default and tagged with `1` and `4094` without gaining a second device or changing the addressing or `connection` output, no additional attachment by default, additional attachments in the declared order from `net1` with their own bridge, tag, address, and MAC address, no gateway on any of them, an empty IP configuration for an addressless attachment before an addressed one and none after the last addressed one, eight attachments accepted, undeclared and distinct declared MAC addresses accepted together, `mac_addresses` in slot order, and the primary attachment and `connection` output unchanged by them, static as the default addressing mode, DHCP declared on the primary IP configuration with no address or gateway and the DNS servers kept, additional attachments left static beside it, the connection host published in either mode and the declared address otherwise, the primary MAC address absent by default and reaching `net0` as given in either mode, and reported first in `mac_addresses`, IPv6 absent by default and, when declared, its address and global or link-local gateway reaching the primary IP configuration beside the static or DHCP IPv4 one without changing the `connection` output or reaching an additional attachment, a supplied IPv6 connection host published beside it, IPv6 DNS servers accepted beside IPv4 ones, and the declared DNS search domain reaching cloud-init exactly as written, as one label or several, in static and DHCP modes and beside static IPv6 and an additional attachment, with the DNS servers, addressing, VM name, and `connection` output unchanged, and a 63-character name with a 189-character domain accepted at 253 characters together — and that bad input fails at plan time, including a null in place of the attachment list, one MAC address declared twice in either letter case, on two additional attachments or on the primary and an additional one, every rejected combination of mode, address, gateway, and connection host, every rejected form of DNS search domain, a qualified VM name, and a name and search domain one character too long together.
 
-They prove nothing about a real Proxmox VE. No clone, boot, cloud-init run, SSH connection, shutdown, stop, destroy, VLAN change, attachment change, DHCP lease, IPv6 change, or guest agent has been exercised. Nor can a mocked provider show that a tag, attachment, addressing-mode, MAC address, or IPv6 change is made in place, or that a plan settles afterwards; [VLAN tagging](#vlan-tagging), [Additional network attachments](#where-this-is-evidenced), [DHCP addressing](#where-the-dhcp-behaviour-is-evidenced), and [Static IPv6](#static-ipv6) say where that evidence comes from. [Compatibility](../../../docs/compatibility.md) records what this evidence does and does not cover.
+They prove nothing about a real Proxmox VE. No clone, boot, cloud-init run, SSH connection, shutdown, stop, destroy, VLAN change, attachment change, DHCP lease, IPv6 change, search-domain change, or guest agent has been exercised. Nor can a mocked provider show that a tag, attachment, addressing-mode, MAC address, IPv6, or search-domain change is made in place, or that a plan settles afterwards; [VLAN tagging](#vlan-tagging), [Additional network attachments](#where-this-is-evidenced), [DHCP addressing](#where-the-dhcp-behaviour-is-evidenced), [Static IPv6](#static-ipv6), and [DNS search domain](#where-the-search-domain-behaviour-is-evidenced) say where that evidence comes from. [Compatibility](../../../docs/compatibility.md) records what this evidence does and does not cover.
 
 `.terraform.lock.hcl` is committed so those checks resolve the same provider build every time, verified against recorded hashes, on Linux and macOS. It governs this repository's own validation. Your root module has its own lock file; this one does not constrain it.

@@ -158,7 +158,10 @@ resource "proxmox_virtual_environment_vm" "this" {
       }
     }
 
+    # The search domain is always declared. Without one, a clone keeps its
+    # template's, and Proxmox gives a VM that has none the node's.
     dns {
+      domain  = var.dns_search_domain
       servers = var.dns_servers
     }
 
@@ -207,6 +210,15 @@ resource "proxmox_virtual_environment_vm" "this" {
     precondition {
       condition     = var.ipv6_gateway == null || var.ipv6_address_cidr != null
       error_message = "An ipv6_gateway needs an ipv6_address_cidr: Proxmox accepts an IPv6 gateway only alongside an IPv6 address."
+    }
+
+    # Proxmox joins the name and the search domain into the guest's fully
+    # qualified name. Each is checked by its own validation, and the length of
+    # the two together is checked here, for the same reason as the IPv6 pairing
+    # above. A null is left to those validations to report.
+    precondition {
+      condition     = var.name == null || var.dns_search_domain == null ? true : length("${var.name}.${var.dns_search_domain}") <= 253
+      error_message = "The name and dns_search_domain together must be at most 253 characters: Proxmox joins them with a dot into the guest's fully qualified name. Shorten the name or the domain."
     }
   }
 }
