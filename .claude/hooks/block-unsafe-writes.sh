@@ -6,7 +6,7 @@
 # private deployment repository. Secrets, private deployment data and generated
 # state are therefore not merely discouraged here, they are out of scope by
 # design. That boundary is decided in ADR 0001 under docs/decisions/ and
-# summarized for a session in CLAUDE.md; this hook decides nothing, it only
+# stated in SECURITY.md; this hook decides nothing, it only
 # refuses the file names those documents rule out.
 #
 # The deny list mirrors .gitignore so that the two agree on what "unsafe to
@@ -40,12 +40,12 @@ deny() {
 # those forms as well.
 case "$path" in
   */inventory/private/*|*/inventories/private/*|inventory/private/*|inventories/private/*)
-    deny "Private inventory data belongs in the private deployment repository, not in this public toolkit (CLAUDE.md: public/private split)." ;;
+    deny "Private inventory data belongs in the private deployment repository, not in this public toolkit (SECURITY.md: publication boundary)." ;;
 esac
 
 case "$base" in
   *.tfstate|*.tfstate.*|*.tfplan|*.tfplan.*)
-    deny "OpenTofu/Terraform state and plan files are generated state and must never be committed to this public repository (CLAUDE.md: no generated state)." ;;
+    deny "OpenTofu/Terraform state and plan files are generated state and must never be committed to this public repository (SECURITY.md: no generated state)." ;;
   *.decrypted|*.decrypted.*)
     deny "Decrypted secret material must never be committed. Commit only the SOPS-encrypted form." ;;
 esac
@@ -59,7 +59,7 @@ esac
 
 case "$base" in
   .env|.env.*)
-    deny "Environment files hold real configuration values. Use a committed .env.example instead (CLAUDE.md: nothing unsafe to publish)." ;;
+    deny "Environment files hold real configuration values. Use a committed .env.example instead (SECURITY.md: nothing unsafe to publish)." ;;
   *.tfvars|*.tfvars.json)
     deny "Variable files carry environment-specific values and belong in the private deployment repository. Commit a .tfvars.example instead." ;;
   *.pem|*.key|*.p12|*.pfx|id_rsa|id_dsa|id_ecdsa|id_ed25519|*.agekey|*.age-key|key.txt|keys.txt)

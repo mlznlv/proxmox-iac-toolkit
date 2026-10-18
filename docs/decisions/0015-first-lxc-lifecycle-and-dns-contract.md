@@ -29,7 +29,7 @@ Retain the first LXC capability and constrain it to the lifecycle and DNS owners
 
 All other ADR 0010 interface, lifecycle, ownership, and scope decisions are retained. In particular, template, datastore, node, and identifier changes remain destructive replacements; bootstrap-key changes remain ignored as an expressly accepted bootstrap-only boundary. Dedicated memory, network, DNS, and name updates reboot a running container on the pinned path; CPU and size-only root-filesystem growth do not request a reboot. Swap remains the documented zero provider default with no new input.
 
-This decision operates within [ADR 0001](0001-public-toolkit-private-deployment-boundary.md), [ADR 0002](0002-lifecycle-orchestration-ownership.md), and [ADR 0004](0004-local-validation-task-ci-security-boundary.md). It changes neither the VM capability nor ongoing guest-configuration ownership. Input syntax and the implementation evidence gate belong in [Architecture](../architecture.md#first-reusable-lxc-capability); platform and evidence claims belong in [Compatibility](../compatibility.md#lxc-capability).
+This decision operates within [ADR 0001](0001-public-toolkit-private-deployment-boundary.md), [ADR 0002](0002-lifecycle-orchestration-ownership.md), and [ADR 0004](0004-local-validation-task-ci-security-boundary.md). It changes neither the VM capability nor ongoing guest-configuration ownership. Input syntax belongs in the [container README](../../tofu/modules/proxmox-linux-container/README.md#inputs) and the implementation evidence gate in [Contributing](../../CONTRIBUTING.md#component-evidence-requirements); platform and evidence claims belong in [Compatibility](../compatibility.md#provider-lifecycle-evidence).
 
 ## Consequences
 
