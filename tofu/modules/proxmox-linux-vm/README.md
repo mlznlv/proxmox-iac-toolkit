@@ -167,6 +167,9 @@ additional_network_attachments = [
 ]
 ```
 
+Write `[]`, or omit the input, for none. A `null` is refused rather than read as an empty list, so
+one passed down by a wrapping module cannot ask to remove attachments a VM already has.
+
 | Attribute | Contract |
 | --- | --- |
 | `bridge` | Required bridge |
@@ -194,7 +197,7 @@ requiring provider/Architecture review.
 
 | Change | Contract and consequence |
 | --- | --- |
-| Add/change/remove a VLAN; change bridge | In-place; running link detaches/re-attaches and interrupts connectivity |
+| Add/change/remove a VLAN; change an additional attachment's `bridge` | In-place; running link detaches/re-attaches and interrupts connectivity |
 | Append an additional attachment | In-place; new device; existing slots/primary MAC preserved |
 | Change or first declare a MAC | In-place VM update; old device is unplugged and a different one appears; old reservations stop matching |
 | Remove a MAC declaration | Retains the current address; no change. Case-only edits can still plan a device change |
@@ -204,8 +207,9 @@ requiring provider/Architecture review.
 | Change source template | Replacement destroys the VM and its disks |
 
 Initialization changes rebuild cloud-init and reboot a running VM on the pinned path. Changed
-data creates a new cloud-init instance: network configuration is reapplied and SSH host keys may
-be regenerated unless the template disables it. Review package-upgrade/default-user behavior
+data creates a new cloud-init instance: network configuration is reapplied and, unless the
+template's cloud-init disables it, SSH host keys are deleted and regenerated, so expect a host-key
+warning on the next connection. Review package-upgrade/default-user behavior
 too. Update dependent addresses, DNS records, inventory and known host keys. An addressless
 appended device alone leaves cloud-init data unchanged. Supported updates must converge to a
 subsequent no-change plan; an initial in-place plan alone is insufficient evidence.

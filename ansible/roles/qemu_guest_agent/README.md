@@ -54,7 +54,8 @@ LXC containers.
 [`tests/`](tests) supplies a syntax fixture and static contract check, alongside Ansible lint.
 The check reads all executable task/handler paths and rejects opaque includes, action forms or
 dependencies it cannot inspect. Required package/service behavior, module use, consumer-owned
-privilege and lack of OpenTofu coupling are checked under
-[Contributing](../../../CONTRIBUTING.md#validate-your-change). These are structural checks;
+privilege and lack of OpenTofu coupling are asserted by
+[`tests/check-role-contract.py`](tests/check-role-contract.py);
+[Contributing](../../../CONTRIBUTING.md#validate-your-change) gives the commands. These are structural checks;
 [Compatibility](../../../docs/compatibility.md#current-evidence-level) records the absence of
 runtime convergence/idempotency evidence.

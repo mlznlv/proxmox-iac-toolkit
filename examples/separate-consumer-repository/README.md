@@ -55,8 +55,8 @@ orchestrates deployment.
 
 ## Limitations and checks
 
-No backend is declared; the [state warning](../../docs/using.md#credentials-state-and-secrets)
-applies before real use. These live invocation steps describe the accepted workflow, not an
+No backend is declared: choose a backend and state custody before any apply, including of this
+example ([state warning](../../docs/using.md#credentials-state-and-secrets)). These live invocation steps describe the accepted workflow, not an
 executed integration test. [Compatibility](../../docs/compatibility.md#current-evidence-level)
 owns evidence limits and [Release policy](../../docs/release-policy.md#maturity) owns
 pre-release guarantees.
