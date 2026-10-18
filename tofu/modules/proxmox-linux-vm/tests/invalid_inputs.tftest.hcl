@@ -23,6 +23,7 @@ variables {
   ipv4_address_cidr = "192.0.2.10/24"
   ipv4_gateway      = "192.0.2.1"
   dns_servers       = ["192.0.2.53"]
+  dns_search_domain = "example.invalid"
   username          = "fictional"
   ssh_public_keys   = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid"]
 }
@@ -1087,6 +1088,192 @@ run "an_ipv6_gateway_without_an_ipv6_address_is_rejected" {
 
   variables {
     ipv6_gateway = "2001:db8::1"
+  }
+
+  expect_failures = [proxmox_virtual_environment_vm.this]
+}
+
+# The DNS search domain is one DNS name, required, with no default and no value
+# that asks for no search domain. Each run breaks one of its rules. The short
+# names are reserved by RFC 2606; the long ones, counted in the comment beside
+# them, are synthetic strings that only measure length.
+
+run "a_null_dns_search_domain_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = null
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "an_empty_dns_search_domain_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = ""
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_of_only_whitespace_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "   "
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+# Nothing is trimmed, so a value read from a file with its newline is refused
+# rather than sent on with it.
+run "a_dns_search_domain_with_surrounding_whitespace_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = " example.invalid\n"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+# Proxmox splits a search domain on whitespace into a list of domains.
+run "a_space_separated_list_of_dns_search_domains_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "example.invalid search.test"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_comma_separated_list_of_dns_search_domains_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "example.invalid,search.test"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_with_an_empty_label_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "example..invalid"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_label_with_a_leading_hyphen_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "-example.invalid"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_label_with_a_trailing_hyphen_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "example-.invalid"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_with_an_underscore_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "exa_mple.invalid"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_that_is_not_ascii_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "exämple.invalid"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+# A first label of 64 characters.
+run "a_dns_search_domain_label_of_64_characters_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "a012345678901234567890123456789012345678901234567890123456789012.invalid"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+# 254 characters in all, in labels of 63, 63, 63, and 62.
+run "a_dns_search_domain_of_254_characters_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "b01234567890123456789012345678901234567890123456789012345678901.c01234567890123456789012345678901234567890123456789012345678901.d01234567890123456789012345678901234567890123456789012345678901.e0123456789012345678901234567890123456789012345678901234567890"
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "a_dns_search_domain_with_a_trailing_dot_is_rejected" {
+  command = plan
+
+  variables {
+    dns_search_domain = "example.invalid."
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+run "the_bare_dot_is_rejected_as_a_dns_search_domain" {
+  command = plan
+
+  variables {
+    dns_search_domain = "."
+  }
+
+  expect_failures = [var.dns_search_domain]
+}
+
+# The search domain does not widen the name rule: the name is still one label.
+run "a_qualified_vm_name_is_rejected" {
+  command = plan
+
+  variables {
+    name = "fictional-vm.example.invalid"
+  }
+
+  expect_failures = [var.name]
+}
+
+# Proxmox joins the name and the search domain into the guest's fully qualified
+# name, which spans both inputs, so the resource's precondition rejects it. A
+# 63-character name and a 190-character domain, in labels of 63, 63, and 62,
+# are each valid alone and make 254 characters together.
+run "a_generated_name_and_domain_of_254_characters_is_rejected" {
+  command = plan
+
+  variables {
+    name              = "a01234567890123456789012345678901234567890123456789012345678901"
+    dns_search_domain = "b01234567890123456789012345678901234567890123456789012345678901.c01234567890123456789012345678901234567890123456789012345678901.d0123456789012345678901234567890123456789012345678901234567890"
   }
 
   expect_failures = [proxmox_virtual_environment_vm.this]
