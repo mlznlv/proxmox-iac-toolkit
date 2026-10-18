@@ -151,6 +151,7 @@ evidence.
 | Attachments | Empty default, ordered slots, all fields, addressless slot mapping, primary-only gateway, eight-device limit, case-insensitive declared-MAC/IP uniqueness, MAC output, unchanged primary/connection/resource and exclusions |
 | DHCP | Static default preserved, conditional inputs, DHCP field without address/gateway, required DNS, host mapping/rejection in both modes, primary MAC, static-only additional attachments |
 | IPv6 | Absent default, address/gateway beside both IPv4 modes, rejects invalid/dynamic forms, IPv4/IPv6 DNS, additional-attachment exclusion, unchanged connection/resource |
+| VM DNS search domain (accepted, not yet implemented) | Required/null/empty/name/list validation, accepted and rejected generated-FQDN boundaries, pass-through to `initialization.dns.domain`, unchanged servers/addressing/connection, no default or no-search mode; see [Architecture](docs/architecture.md#vm-dns-search-domain) |
 | LXC | Template creation rather than clone, Debian/unprivileged/start-on-boot, nesting default/override, sizing/rootfs, one static interface, explicit DNS domain mapping/validation, password-free creation-only keys, declared-value connection, exclusions |
 | Role/example | Syntax/lint, package/service/module contract, consumer-owned privilege, no state coupling; one checkout, full SHA, unchanged inventory mapping, valid fictional interface values and no acquisition/backend/secret/orchestration mechanism |
 

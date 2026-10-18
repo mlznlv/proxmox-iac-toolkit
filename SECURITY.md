@@ -22,7 +22,7 @@ encryption.
 
 Normal validation needs no credentials, private inventory, decryption or live environment. It
 performs no infrastructure apply or destroy. Public CI treats PR code as untrusted; its controls
-are in [Architecture](docs/architecture.md#validation-boundary). Release publication uses
+are in [Architecture](docs/architecture.md#validation-and-live-testing-boundary). Release publication uses
 maintainer authorization outside normal CI under the [release policy](docs/release-policy.md).
 
 The project provides no response-time or disclosure-timeline commitment at this stage; see

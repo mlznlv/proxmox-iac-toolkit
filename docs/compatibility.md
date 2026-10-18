@@ -73,11 +73,37 @@ planning and update/read paths under the [acceptance
 procedure](../CONTRIBUTING.md#component-evidence-requirements). Unexpected replacement or
 recurring differences for a supported update block adoption pending Architecture review.
 
-The accepted [VM DNS decision](decisions/0019-explicit-vm-dns-search-domain.md) awaits
-implementation. Its [investigation](https://github.com/mlznlv/proxmox-iac-toolkit/issues/121#issuecomment-6233199488)
-inspected the locked provider and pinned qemu-server paths and executed extracted DNS/hostname
-helpers with a fictional resolver reader. It did not execute installed Proxmox/cloud-init or
-apply/refresh. Implementation still needs the decision's lifecycle and CLI-minimum evidence.
+### VM DNS search domain
+
+[ADR 0019](decisions/0019-explicit-vm-dns-search-domain.md) adopts a required explicit
+consumer-owned single DNS search domain for the VM. This is an approved breaking input addition
+awaiting implementation, not an existing VM input or a new PVE/provider target. The VM name
+remains one DNS label; the combined generated `name.domain` must pass the locally decidable
+length limit, not just each input separately. DNS servers remain required, and primary IPv4
+static/DHCP, optional static IPv6, additional attachments and declared `connection` metadata
+retain their contracts.
+
+VM-specific source for locked v0.111.1 at `b22fe919fc34476b232191b69c8907f0c1aa5bea` and
+qemu-server at `14c0f871fa926e04eee090afae5d2d8670aa4a79` establishes independent template/node
+search-domain inheritance despite explicit nameservers, nonempty-domain request/read mapping and
+the absent empty-domain deletion path. The VM API accepts a string; neither that acceptance nor
+LXC's different schema establishes a safe VM no-search sentinel.
+
+Supported explicit-domain adoption and nonempty-to-nonempty changes must preserve the VM and
+converge. Developer acceptance requires exact-provider implementation evidence and subsequent
+no-change plans grounded in update/read behavior, separately from module mocks. Removal and
+return to inheritance are unsupported. A build merely allowed by the provider constraint
+acquires no lifecycle evidence until reviewed; upgrades must re-evaluate this gate.
+
+The [investigation
+record](https://github.com/mlznlv/proxmox-iac-toolkit/issues/121#issuecomment-6233199488)
+distinguishes pinned source inspection from extracted DNS/hostname-helper probes with a
+fictional resolver reader. These are not full installed Proxmox/cloud-init or guest tests.
+Initialization updates can rebuild cloud-init and reboot a running VM; generated FQDN and
+instance identity may change, with the established reconfiguration, possible host-key
+regeneration and connectivity consequences. None of this establishes actual guest DNS, hostname,
+reboot, SSH or reachability behavior. No provider upgrade, LXC DNS change or live-testing
+requirement is introduced.
 
 ## Current evidence level
 
