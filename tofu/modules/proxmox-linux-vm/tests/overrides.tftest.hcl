@@ -141,10 +141,11 @@ run "the_primary_ipv4_inputs_may_use_an_octet_of_0_and_a_prefix_length_of_8" {
 # The key rule allows one key per entry on one line, with or without a
 # comment, and ignores the surrounding whitespace a key read from a file
 # carries. Each entry must also reach the provider without that whitespace,
-# compared exactly: the provider reads the keys back trimmed, so an entry
-# sent with it would plan a change on every run (#133). The ECDSA key is a
-# second throwaway public key, chosen because its encoding ends in the two
-# padding characters base64 allows; nothing holds its private half either.
+# compared exactly, because the provider trims only the ends of the joined
+# keys when it reads them back, and some entries sent with it would plan a
+# change on every run (#133). The ECDSA key is a second throwaway public key,
+# chosen because its encoding ends in the two padding characters base64
+# allows; nothing holds its private half either.
 run "accepted_key_forms_reach_the_bootstrap_account" {
   command = plan
 
