@@ -6,10 +6,11 @@ Proxmox. It is separate from the [VM module](../proxmox-linux-vm/README.md).
 
 ## Requirements
 
-Read [Compatibility](../../../docs/compatibility.md) and the executable
-[`versions.tf`](versions.tf). Your root lock selects the provider build. Supply provider/backend
-configuration, state custody, template, node/storage, bridge/addressing/DNS, sizing and SSH
-authentication under [Using](../../../docs/using.md#what-you-own).
+[Compatibility](../../../docs/compatibility.md#support-and-evidence-matrix) records the Proxmox
+VE 9.x target; executable requirements are in [`versions.tf`](versions.tf). Your root lock
+selects the provider build. Supply provider/backend configuration, state custody, template,
+node/storage, bridge/addressing/DNS, sizing and SSH authentication under
+[Using](../../../docs/using.md#what-you-own).
 
 The template must be a Debian root filesystem recognized by Proxmox's Debian setup plugin, with
 an init system that works unprivileged under the selected nesting setting, and an SSH server
@@ -74,7 +75,8 @@ Optional:
 [`variables.tf`](variables.tf) validates locally decidable name, size, identifier, IPv4, DNS
 server, search-domain and key syntax before apply. IPv4 uses plain dotted decimal without
 leading-zero octets; keys are trimmed single OpenSSH public-key lines. The 64-character hostname
-limit comes from LXC's `lxc.uts.name` start limit.
+limit comes from LXC's `lxc.uts.name` start limit, read from Proxmox's and LXC's source, not
+observed.
 
 Both DNS servers and a single nonempty search domain are required, passed unchanged and never
 derived from the hostname. Proxmox independently inherits each from the node when omitted. Empty
@@ -89,10 +91,11 @@ mode is offered.
 | `container_id` | Supplied or assigned identifier |
 | `container_name` | Declared hostname |
 
-Outputs are non-sensitive and never discover an address. Port is metadata and configures no SSH
-service. The module fixes Debian type, unprivileged mode and start-on-host-boot, with no startup
-ordering. Root receives keys and no password. Dedicated memory is explicit; omitted swap uses
-the provider's zero default rather than Proxmox's 512 MiB default, so size memory accordingly.
+Outputs are non-sensitive and never discover an address; the module never publishes a private
+key or a password, and never accepts one. Port is metadata and configures no SSH service. The
+module fixes Debian type, unprivileged mode and start-on-host-boot, with no startup ordering.
+Root receives keys and no password. Dedicated memory is explicit; omitted swap uses the
+provider's zero default rather than Proxmox's 512 MiB default, so size memory accordingly.
 
 ### Nesting
 
@@ -104,7 +107,8 @@ template works without it.
 pinned provider's update restates non-nesting false feature flags; Proxmox treats
 absent-to-false as a change and restricts these changes to the exact `root@pam` identity, not an
 API token. Creation sends nesting alone when on. This module adopts no elevated-identity
-requirement and does not hide toggles.
+requirement and does not hide toggles. All of this is read from the provider's and Proxmox's
+source; no refusal has been observed.
 
 ## Lifecycle
 

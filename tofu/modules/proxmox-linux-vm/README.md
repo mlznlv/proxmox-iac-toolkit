@@ -7,9 +7,10 @@ toolkit](../../../docs/using.md).
 
 ## Requirements
 
-Read [Compatibility](../../../docs/compatibility.md#opentofu-cli-compatibility-and-evidence)
-for sampled CLI evidence. Executable requirements are in [`versions.tf`](versions.tf); your root
-lock selects the provider build.
+[Compatibility](../../../docs/compatibility.md#support-and-evidence-matrix) records the Proxmox
+VE 9.x target and [sampled CLI
+evidence](../../../docs/compatibility.md#opentofu-cli-compatibility-and-evidence). Executable
+requirements are in [`versions.tf`](versions.tf); your root lock selects the provider build.
 
 Supply a template on the target node whose cloud-init handles your selected addressing, DNS,
 username and SSH public keys. Additional addressed interfaces must be matched by MAC; DHCP needs
@@ -112,14 +113,16 @@ a name and search domain longer than 253 characters together.
 | `vm_id` | Supplied or assigned VM identifier |
 | `vm_name` | Declared name |
 
-All are non-sensitive. `connection` is metadata: it configures no SSH service, resolves no
-hostname, discovers no address and proves no reachability. Declared IPv6 never becomes `host`
-automatically. Map values into ordinary inventory under
-[Using](../../../docs/using.md#workflow); no component reads them at runtime.
+All are non-sensitive; the module never publishes a private key or a password, and never accepts
+one. `connection` is metadata: it configures no SSH service, resolves no hostname, discovers no
+address and proves no reachability. Declared IPv6 never becomes `host` automatically. Map values
+into ordinary inventory under [Using](../../../docs/using.md#workflow); no component reads them
+at runtime.
 
 ## Network examples
 
-These are input fragments to add to the complete call above.
+These are input fragments for the complete call above. An input the call already has, such as
+`dns_servers`, is replaced rather than repeated.
 
 ### VLAN tagging
 
@@ -160,12 +163,16 @@ dns_servers       = ["2001:db8::53", "192.0.2.53"]
 ```
 
 IPv6 is optional beside either primary IPv4 mode. The address requires a prefix 8–128; a global
-or link-local gateway is optional but requires the address. `auto`, `dhcp`, `manual`, IPv6-only
-and additional-attachment IPv6 are unsupported. Without a gateway the module makes no
-default-route claim. Removing declared IPv6 does not remove guest-configured link-local or
-router-advertisement addresses.
+or link-local gateway is optional but requires the address. `auto`, `dhcp` and `manual` are
+rejected when you plan; if your network relies on autoconfiguration or DHCPv6, configure IPv6
+inside the guest instead. IPv6-only and additional-attachment IPv6 are unsupported. Without a
+gateway the module makes no default-route claim. Removing declared IPv6 does not remove
+guest-configured link-local or router-advertisement addresses.
 
 ### Additional network attachments
+
+**An attachment you add is one you keep.** Read [Attachment retirement is
+unsupported](#attachment-retirement-is-unsupported) before you declare any.
 
 ```hcl
 additional_network_attachments = [
@@ -354,14 +361,14 @@ requiring provider/Architecture review.
 
 | Change | Contract and consequence |
 | --- | --- |
-| Add/change/remove a VLAN; change an additional attachment's `bridge` | In-place; running link detaches/re-attaches and interrupts connectivity |
+| Add/change/remove a VLAN; change an additional attachment's `bridge` | In-place; running link detaches/re-attaches and interrupts connectivity; whether it returns depends on your bridge, VLAN, switching, routing and addressing, not on this module |
 | Append an additional attachment | In-place; new device; existing slots/primary MAC preserved; an addressed one also has the initialization consequences below |
-| Change or first declare a MAC | In-place VM update; old device is unplugged and a different one appears; old reservations stop matching |
-| Remove a MAC declaration | Retains the current address; no change. Case-only edits can still plan a device change |
+| Change or first declare a MAC | In-place VM update; old device is unplugged and a different one appears; old reservations stop matching. The same address in a different letter case plans as a change too |
+| Remove a MAC declaration | Retains the current address; no change |
 | Add/change an attachment address, including the primary's own; switch static/DHCP | In-place, with only `ipconfig0` changing for a mode switch; initialization consequences below |
 | Add/change/remove primary IPv6 or change DNS | In-place, with only `initialization` changing for an IPv6-only change; initialization consequences below |
 | Declare or change the DNS search domain | In-place, with only the DNS `domain` in `initialization` changing; initialization consequences below. Removal is unsupported; see [DNS search domain](#dns-search-domain) |
-| First plan for a VM created before keys were trimmed, where its keys read back differently | One in-place update changing only `keys`, then no change; reboot and possible new cloud-init instance as in [Bootstrap SSH keys](#bootstrap-ssh-keys) |
+| First plan for a VM created before keys were trimmed, where what it holds differs from the trimmed keys | One in-place update changing only `keys`, then no change; reboot and possible new cloud-init instance as in [Bootstrap SSH keys](#bootstrap-ssh-keys) |
 | Change only connection host/port | Output only; no infrastructure change |
 | Change source template | Replacement destroys the VM and its disks |
 
@@ -398,7 +405,8 @@ The channel is attached by default and provider IP waiting is always disabled. C
 compose inventory, then run the [guest-agent
 role](../../../ansible/roles/qemu_guest_agent/README.md); no second apply or power cycle is
 needed. Opting out creates a VM where the agent cannot run; attaching the channel later requires
-stop/start, because it is not hot-plugged.
+stop/start, because it is not hot-plugged. [ADR
+0006](../../../docs/decisions/0006-guest-agent-channel-at-creation.md) records it in full.
 
 Before the agent runs, shutdown/reboot probe it for three seconds, warn and fall back to ACPI;
 queries report unavailable. Backups skip filesystem freeze and are crash-consistent rather than
