@@ -22,6 +22,7 @@ variables {
   ipv4_address_cidr = "192.0.2.10/24"
   ipv4_gateway      = "192.0.2.1"
   dns_servers       = ["192.0.2.53", "192.0.2.54"]
+  dns_search_domain = "example.invalid"
   username          = "fictional"
   ssh_public_keys   = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid"]
 }
@@ -91,6 +92,11 @@ run "static_addressing_and_bootstrap_access" {
   assert {
     condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].servers == tolist(["192.0.2.53", "192.0.2.54"])
     error_message = "The declared DNS servers must reach cloud-init in the declared order."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].domain == "example.invalid"
+    error_message = "The declared DNS search domain must reach cloud-init."
   }
 
   assert {

@@ -21,7 +21,7 @@ Everything environment-shaped, which is most of it:
 | Yours | Notes |
 | --- | --- |
 | The checkout: how you obtain it, where you put it, when you update it | A submodule pinned to the SHA, a vendored copy whose origin and revision you record, or any other fetch you control |
-| OpenTofu inputs | Node, template, datastore, bridge, addresses, sizing, identifiers |
+| OpenTofu inputs | Node, template, datastore, bridge, addresses, DNS servers and search domain, sizing, identifiers |
 | Provider configuration, endpoint, credentials | The module declares no `provider` block |
 | Backend and state custody | The module declares no backend |
 | Ansible inventory and authentication | Including the private half of every key you authorize |
@@ -120,10 +120,12 @@ Relative paths inside `ansible.cfg` resolve against the directory holding the fi
 ```text
 Error: Missing required argument
   on main.tf line 20, in module "guest":
-The argument "node_name" is required, but no definition was found.
+The argument "dns_search_domain" is required, but no definition was found.
 ```
 
 Required inputs have no defaults, so every value the module cannot reasonably guess for you is named explicitly. `ipv4_address_cidr` and `ipv4_gateway` are the exception: required only in the default static mode, they default to `null` so that [DHCP](../tofu/modules/proxmox-linux-vm/README.md#dhcp-addressing) can leave them out, and a static configuration that omits them is rejected by a precondition when you plan rather than by this error. The optional inputs each default to something, and they are not all the same kind of thing: `guest_agent_enabled` and `stop_on_destroy` choose behaviour, `ssh_port` and `connection_host` only set what the `connection` output publishes and configure nothing in the guest, and `vm_id` defaults to `null`, which leaves Proxmox to assign the next free identifier. [Its README](../tofu/modules/proxmox-linux-vm/README.md) lists both sets.
+
+A revision that adds a required input stops a configuration written before it with this error, as the one that added `dns_search_domain` does. Choose the value deliberately before you supply it: the [changelog](../CHANGELOG.md) entry for that revision says what to decide and what the plan will then show.
 
 ### An input is rejected
 
