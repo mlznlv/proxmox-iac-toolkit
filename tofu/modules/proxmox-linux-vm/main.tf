@@ -165,9 +165,14 @@ resource "proxmox_virtual_environment_vm" "this" {
       servers = var.dns_servers
     }
 
+    # Trimmed, because that is the form the input rule checks. The provider
+    # trims only the ends of the joined keys before splitting them on
+    # newlines, so sent untrimmed, whitespace before the first key or after
+    # the last, or a newline ending any other, such as the one a key read from
+    # a file ends in, would read back changed and plan an update on every run.
     user_account {
       username = var.username
-      keys     = var.ssh_public_keys
+      keys     = [for key in var.ssh_public_keys : trimspace(key)]
     }
   }
 

@@ -75,7 +75,7 @@ Required:
 | `dns_servers` | `list(string)` | IPv4 or IPv6 DNS servers, in order of preference. At least one. |
 | `dns_search_domain` | `string` | DNS search domain for the guest: one DNS name, such as `example.invalid`, without a trailing dot. There is no default and no value for no search domain. See [DNS search domain](#dns-search-domain). |
 | `username` | `string` | Bootstrap account cloud-init creates. |
-| `ssh_public_keys` | `list(string)` | OpenSSH **public** keys authorized for that account. At least one, each one key on one line; a trailing newline is allowed. |
+| `ssh_public_keys` | `list(string)` | OpenSSH **public** keys authorized for that account. At least one, each one key on one line; a trailing newline is allowed. Each key is sent without its surrounding whitespace. See [Bootstrap SSH keys](#bootstrap-ssh-keys). |
 
 Optional:
 
@@ -281,6 +281,70 @@ succeeds, that host keys are regenerated, or that the guest is reachable afterwa
 [Compatibility](../../../docs/compatibility.md#vm-dns-search-domain) records that boundary, and
 your root module's own lock decides which provider build you run.
 
+## Bootstrap SSH keys
+
+`ssh_public_keys` are the keys cloud-init authorizes for the bootstrap account. Each entry is
+one OpenSSH public key on one line, with or without a comment, and whitespace around it is
+allowed, such as the newline a key read with `file()` ends in. The module sends each entry
+without that whitespace, keeping the order you declare, any duplicates, and each key and comment
+exactly as written.
+
+The provider build this repository locks joins the keys with newlines when it sends them. When
+it reads them back, it trims whitespace from the ends of the joined value only, then splits it
+on newlines. Keys sent untrimmed could therefore read back differently from what was sent:
+whitespace before the first key or after the last was lost, and a newline ending any other key
+became an extra, empty key. Either planned an update on every run. Sent trimmed, the keys read
+back as sent, and the next plan proposes nothing.
+
+### Updating a VM created before keys were trimmed
+
+**Your configuration needs no change, but an existing VM may need one apply.** After you move
+your pin, the first plan for an existing VM proposes nothing when what it holds already matches
+your keys trimmed. That is the case for one key, and for several keys with whitespace, if any,
+only before the first or after the last.
+
+Otherwise, whenever a key other than the last ends in whitespace or a key other than the first
+starts with it, the first plan proposes one update in place that changes only the bootstrap
+`keys`. It removes the empty key or the whitespace left on a key, and keeps the keys, their
+order, their duplicates and their comments. Once that update is applied, the next plan proposes
+nothing. Two kinds of configuration get it:
+
+- **Ones that already planned an update on every run:** a newline at the end of a key other than
+  the last, as with `[file("a.pub"), file("b.pub")]`, or at the start of a key other than the
+  first. The update is proposed one last time.
+- **Ones that planned no change before:** other whitespace, such as spaces or tabs, at the start
+  of a key other than the first or at the end of a key other than the last. The provider read it
+  back as it was sent, so these were stable, and they now plan this update once.
+
+**The update is disruptive.** By the provider's source, any change to the cloud-init
+configuration rebuilds the cloud-init drive and reboots a running VM, so schedule it, and expect
+connections to drop. What the guest does next depends on whether the user data Proxmox generates
+for it changes. Removing only an empty key can leave that data as it was. Removing spaces, tabs
+or a carriage return from a key can change it, and changed data can make the next boot a new
+cloud-init instance, which re-applies cloud-init's configuration, the bootstrap account
+included, and, depending on your template's configuration, can regenerate the guest's SSH host
+keys, so a host-key warning may follow. This module offers no way to make the update without the
+reboot, and promises nothing about reaching the guest afterwards.
+
+Read the plan before you apply it, and apply it explicitly. The update shows the VM as
+`update in-place`, with only `keys` in the bootstrap account changing. If a plan shows the VM
+being replaced, or anything else changing that this README or the [changelog](../../../CHANGELOG.md)
+does not tell you to expect, do not apply it. Nothing in this module applies the update for you
+or edits state, and the guest's authorized keys after cloud-init stay yours to manage.
+
+### Where the key behaviour is evidenced
+
+All of the above is for the provider build this repository locks, `bpg/proxmox` v0.111.1. The
+plans were made with that build, with refresh disabled, against prior states written through a
+model of how it sends and reads back the keys and of Proxmox storing them as sent, and each
+update was planned again against its modelled read-back. The send and read paths, the reboot,
+and how Proxmox generates user data are read from the provider's and Proxmox's source.
+
+None of it has been observed against a real Proxmox VE. Nothing here shows the reboot, a new
+cloud-init instance, host keys regenerated, or that the guest is reachable afterwards.
+[Compatibility](../../../docs/compatibility.md#vm-bootstrap-ssh-keys) records that boundary, and
+your root module's own lock decides which provider build you run.
+
 ## Lifecycle
 
 These are provider-level expectations, not observed live behavior; the exact build and evidence
@@ -297,6 +361,7 @@ requiring provider/Architecture review.
 | Add/change an attachment address, including the primary's own; switch static/DHCP | In-place, with only `ipconfig0` changing for a mode switch; initialization consequences below |
 | Add/change/remove primary IPv6 or change DNS | In-place, with only `initialization` changing for an IPv6-only change; initialization consequences below |
 | Declare or change the DNS search domain | In-place, with only the DNS `domain` in `initialization` changing; initialization consequences below. Removal is unsupported; see [DNS search domain](#dns-search-domain) |
+| First plan for a VM created before keys were trimmed, where its keys read back differently | One in-place update changing only `keys`, then no change; reboot and possible new cloud-init instance as in [Bootstrap SSH keys](#bootstrap-ssh-keys) |
 | Change only connection host/port | Output only; no infrastructure change |
 | Change source template | Replacement destroys the VM and its disks |
 

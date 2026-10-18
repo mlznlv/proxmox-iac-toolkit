@@ -26,6 +26,20 @@ updates; a changed durable policy requires an ADR.
 [ADR 0016](decisions/0016-module-cli-minimum-and-evidence-policy.md) retains 1.6.0 as the
 consumer minimum for both modules.
 
+**The VM source with trimmed SSH keys meets its declared minimum in the checks run.** The VM
+module of [#134](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134), which adds the key
+change of [#133](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133) to the required
+search domain, and whose `tofu/modules/proxmox-linux-vm` directory is Git tree
+`cc32485145e7af26ae3f82e5bb83ebd8eb1edeec`, was checked unmodified through a fictional consuming
+root on 1.6.0 and 1.9.4, and on the contributor pin, with the module's committed provider lock
+read only. It passed the cases of #123's and #135's records below, with the search domain
+declared and the planned keys checked too, and a case with whitespace around each key, which
+planned each key trimmed. [The evidence
+record](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134#issuecomment-6250258845) gives
+every case and its result, and names the earlier record that gives the CLI and provider
+identities. These are sampled initialization, validation and plan results, not full feature
+qualification or an interval-wide guarantee.
+
 **The VM source with the required search domain meets its declared minimum in the checks run.**
 The VM module of [#135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135), whose
 `tofu/modules/proxmox-linux-vm` directory is Git tree
@@ -87,6 +101,7 @@ rules.
 | DHCP/primary MAC | [PR #114](https://github.com/mlznlv/proxmox-iac-toolkit/pull/114), [ADR 0012](decisions/0012-dhcp-primary-attachment-addressing.md) | Mode/MAC mapping, in-place plans and modeled subsequent no-change plans |
 | Static IPv6 | [PR #113](https://github.com/mlznlv/proxmox-iac-toolkit/pull/113), [ADR 0013](decisions/0013-static-ipv6-primary-attachment.md) | Add/change/remove plans and modeled convergence across IPv4 modes; pinned cloud-init renderer source |
 | VM DNS search domain | [PR #135](https://github.com/mlznlv/proxmox-iac-toolkit/pull/135), [ADR 0019](decisions/0019-explicit-vm-dns-search-domain.md) | Declare, adopt and change plans in both IPv4 modes and beside IPv6 and an additional attachment, modeled subsequent no-change plans; pinned provider and qemu-server source |
+| VM bootstrap SSH keys | [PR #134](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134), [#133](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133) | Send/read-back source and plans against modeled read-back: one keys-only in-place update where needed, then no change |
 | LXC | [PR #107](https://github.com/mlznlv/proxmox-iac-toolkit/pull/107), [ADR 0015](decisions/0015-first-lxc-lifecycle-and-dns-contract.md) | Synthetic-state lifecycle plans plus provider/SDK/Proxmox inspection for keys, DNS, shrink, nesting, reboot and read/destroy behavior |
 
 No apply or live refresh was executed by this evidence. Source-grounded modeled read-back is
@@ -138,6 +153,38 @@ instance identity may change, with the established reconfiguration, possible hos
 regeneration and connectivity consequences. None of this establishes actual guest DNS, hostname,
 reboot, SSH or reachability behavior. No provider upgrade, LXC DNS change or live-testing
 requirement is introduced.
+
+### VM bootstrap SSH keys
+
+The locked v0.111.1 at `b22fe919fc34476b232191b69c8907f0c1aa5bea` joins the bootstrap keys with
+newlines when it sends them and, when it reads them back, trims whitespace from the ends of the
+joined value only and splits it on newlines, with no diff suppression; qemu-server at
+`14c0f871fa926e04eee090afae5d2d8670aa4a79` stores `sshkeys` as sent. Whitespace before the first
+key or after the last, or a newline ending any other, therefore read back changed and planned an
+in-place `initialization` update on every run, which by the provider's source rebuilds the
+cloud-init drive and reboots a running VM. Since
+[#133](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133), the module sends each key
+trimmed.
+
+[The
+reproduction](https://github.com/mlznlv/proxmox-iac-toolkit/issues/133#issuecomment-6241658338)
+and the [adoption
+record](https://github.com/mlznlv/proxmox-iac-toolkit/pull/134#issuecomment-6250238133) on the
+source that also requires the search domain are plans on 1.12.6 and 1.6.0 with refresh disabled,
+against prior states written through a model of the provider's send and read paths and of
+Proxmox storing the keys as sent. A VM created by the corrected module plans no change. An
+existing VM plans no change when the provider's read of its keys already equals each declared
+key trimmed. Otherwise it plans one in-place update that changes only `keys`, including where
+several keys planned no change before, and a further plan against that update's modelled
+read-back proposes nothing. The [module
+README](../tofu/modules/proxmox-linux-vm/README.md#bootstrap-ssh-keys) and the
+[changelog](../CHANGELOG.md) say which configurations are affected.
+
+Neither record observes Proxmox storing or returning the keys, a refresh, an apply, a reboot, or
+cloud-init on a guest. That removing only an empty key can leave the generated user data
+unchanged, while removing other whitespace can change it and with it the cloud-init instance, is
+read from qemu-server's source. Whether a guest then regenerates its SSH host keys depends on
+its template, and none of this establishes guest SSH access or reachability.
 
 ## Current evidence level
 
