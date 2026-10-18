@@ -32,7 +32,8 @@ not the manager, decide.
 
 Change versions through a reviewed PR. For Python, edit the declaration and regenerate the lock
 with the command in its header; never edit the lock by hand. The container and CI consume these
-same files. Contributor pins do not change [module consumption
+same files. Contributor pins are not a release compatibility or support statement, and they do
+not change [module consumption
 requirements](docs/compatibility.md#opentofu-cli-compatibility-and-evidence).
 
 The container definition mounts only the workspace, adds no privileges, capabilities,
@@ -51,7 +52,8 @@ task validate
 ```
 
 [`Taskfile.yml`](Taskfile.yml) is the command reference: its `cmds` can also be run directly
-without Task, and Task prints each invocation. It runs every check without caching and stops at
+without Task (replace `{{.PYTHON_TOOL_PREFIX}}` with `.venv/bin/`, or drop it when the tools are on
+`PATH`), and Task prints each invocation. It runs every check without caching and stops at
 the first failure. For focused checks, use the `validate:*` entries listed by Task. CI invokes
 the same definitions, tool versions, configuration and pass/fail semantics in its five jobs.
 
@@ -63,8 +65,9 @@ but be unusable.
 The checks cover whitespace, lock consistency, Markdown/links, YAML/schemas, workflows,
 publication safety, secret history, the optional stop hook, modules, the role, inventory
 composition and the consumer example. File checks use the Git index rather than walking caches
-or scratch files. The whitespace task checks committed `HEAD`; also run `git diff --check` and
-`git diff --cached --check` while editing.
+or scratch files, so a local run checks exactly what a CI checkout holds. The whitespace task
+checks committed `HEAD`; also run `git diff --check` and `git diff --cached --check` while
+editing.
 
 Validation leaves tracked content unchanged. Provider initialization writes ignored
 `.terraform/` directories; the example check uses a temporary checkout fixture. Provider
@@ -84,19 +87,22 @@ At the exact declared minimum, check the final **unmodified** module through a f
 consuming root with valid required inputs and nullable defaults. Copy the module's provider lock
 into that root; initialize with backend access off and the lock read-only, then validate. Add
 accepted/rejected cases for corrected behavior and its interactions with existing modes. Where
-planning is needed, use isolated refresh-disabled exact-provider plans and fictional values.
+planning is needed, use isolated refresh-disabled exact-provider plans and fictional values,
+never a live endpoint or real credentials.
 
 Record source revision, CLI version and verified executable acquisition, provider build/lock,
 inputs, commands, successes, failures and any scratch patching. Recheck final unmodified source:
-patched diagnostics cannot establish its minimum. Full validation on the contributor pin and
-separately specified older-version checks still apply. A test-runner feature's syntax
-prerequisite neither raises the consumer minimum nor qualifies the whole suite on every later
-CLI. This procedure introduces no permanent CI version matrix.
+patched diagnostics or a baseline on another CLI cannot establish its minimum, and the complete
+mock suite need not run on it. Full validation on the contributor pin and separately specified
+older-version checks still apply. A test-runner feature's syntax prerequisite neither raises the
+consumer minimum nor qualifies the whole suite on every later CLI. This procedure introduces no
+permanent version matrix.
 
 ## Contribution workflow
 
 Implementation starts from a [Specification](.github/ISSUE_TEMPLATE/spec.yml) and, when needed,
-an [Implementation task](.github/ISSUE_TEMPLATE/task.yml). Boundary or decision changes use an
+an [Implementation task](.github/ISSUE_TEMPLATE/task.yml). Changes to boundaries, decision
+records, the roadmap's milestone definitions, repository layout or documentation ownership use an
 [Architecture change](.github/ISSUE_TEMPLATE/architecture.yml). Recording milestone completion,
 the current phase or the next action is PO-owned roadmap reconciliation, raised as an Issue and
 judged against the roadmap's own exit criteria; it is not an Architecture change. Check
@@ -128,14 +134,15 @@ of repeating its rules, tables, or validation logs.
 | Milestone plan (sequence, goals, entry/exit criteria, dependencies), current phase, next action | `docs/roadmap.md` |
 | Issue-level status, blockers, and run logs | GitHub Issues and Projects |
 | Release rules | `docs/release-policy.md` |
-| Reasons for durable decisions | `docs/decisions/` |
+| Durable decisions and their rationale | `docs/decisions/` |
 | Current interface, lifecycle, examples, limitations | Component and example READMEs |
 | Commands, versions, dependency resolution | `Taskfile.yml`, executable declarations and lock files |
 | Agent-only procedures | `CLAUDE.md` and `.claude/skills/` |
 
 Keep public guides and component, role, and example READMEs reachable from the root README.
-Update the owning document when a contract changes; use links for context elsewhere. Accepted
-ADRs preserve decisions, not their original wording.
+Update the owning document when a contract changes; use links for context elsewhere. An
+accepted ADR's decision text changes only through a superseding ADR, under the [ADR
+convention](docs/decisions/README.md#convention).
 
 ## Component evidence requirements
 

@@ -3,7 +3,7 @@
 This file is optional orientation, not project authority. Start at [README](README.md); use
 [documentation ownership](CONTRIBUTING.md#documentation-ownership) to find the document that
 decides. The [roadmap](docs/roadmap.md) holds the milestone plan and current phase; issue-level
-work and dependencies live in GitHub Issues/Projects; [ADRs](docs/decisions/README.md) explain
+work and dependencies live in GitHub Issues/Projects; [ADRs](docs/decisions/README.md) record
 durable decisions.
 
 - Read the issue/maintainer authority and dependencies before implementation.
@@ -11,7 +11,7 @@ durable decisions.
 - Keep changes inside the authorized scope; report unrelated findings separately.
 - Follow [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md). Inspect actual
   values, not just filenames, and keep optional `.claude/` removable.
-- Run documented commands/procedures before claiming they work. For behavior
+- Do not document a command, path or setup procedure without running it first. For behavior
   changes, use a focused failing regression where useful; for documentation,
   verify links, semantic coverage and relevant repository checks.
 - Report fresh evidence and limitations using

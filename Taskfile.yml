@@ -147,7 +147,7 @@ tasks:
       # against this one: the blocking case has to make a check fail, and doing
       # that in a contributor's own tree would be both rude and unreliable. The
       # script reports nothing to check when .claude/ has been removed, which
-      # the repository design allows.
+      # the repository layout in docs/architecture.md allows.
       - ./scripts/check-stop-hook.sh
 
   validate:secrets:

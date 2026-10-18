@@ -9,7 +9,7 @@ disable-model-invocation: true
 Use [Contributing](../../../CONTRIBUTING.md#contribution-workflow) for authority, issue types
 and focused branch/PR workflow. Derive ownership from the governing document, not a similar
 issue's label. Verify stated dependencies on `main`; a PO-owned readiness transition is not
-yours to infer. Explicit maintainer authorization in the session takes precedence.
+yours to infer.
 
 Follow the [PR template](../../../.github/pull_request_template.md) and
 [validation-evidence](../validation-evidence/SKILL.md). Keep the body true as the branch

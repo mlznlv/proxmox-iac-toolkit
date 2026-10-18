@@ -35,7 +35,7 @@ To work on the toolkit itself, follow [Contributing](CONTRIBUTING.md).
 | [Architecture](docs/architecture.md) | Boundaries, dependencies and ownership |
 | [Compatibility](docs/compatibility.md) | Targets and evidence levels |
 | [Roadmap](docs/roadmap.md) | Approved milestone plan and current phase |
-| [Decisions](docs/decisions/README.md) | Durable rationale and ADR convention |
+| [Decisions](docs/decisions/README.md) | Durable decisions and ADR convention |
 | [Release policy](docs/release-policy.md) | Release gates, immutability and corrections |
 | [Changelog](CHANGELOG.md) | Consumer-visible changes |
 

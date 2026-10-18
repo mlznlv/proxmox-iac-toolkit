@@ -75,7 +75,8 @@ the complete gate; drafts may be edited or discarded. After publication, only
 editorial/non-semantic title or note corrections may amend the record. Substantive source,
 compatibility, migration or artifact corrections need a **new version**. Never move the tag,
 replace/delete immutable assets, rewrite the source snapshot or delete/recreate the release.
-Editorial changelog corrections on `main` leave the tagged history intact.
+Substantive facts about a published release are never silently rewritten in its changelog entry;
+editorial changelog corrections on `main` leave the tagged history intact.
 
 Maintainer publication authorization stays outside normal public CI. No release credential,
 elevated write permission, privileged PR trigger or credential broker is added. Validation
