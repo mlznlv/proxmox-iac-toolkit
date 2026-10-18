@@ -84,15 +84,87 @@ state, plans, logs or decrypted artifacts may be published. [ADR
 0004](decisions/0004-local-validation-task-ci-security-boundary.md) records these decisions;
 [Compatibility](compatibility.md) owns evidence claims.
 
-Live testing requires separate accepted Architecture, isolation from normal CI, explicit opt-in
-and defined credential custody, trusted triggers, infrastructure ownership, cleanup, failures
-and cost responsibility before implementation. A new ADR is required when that design changes a
-durable security, lifecycle-ownership, compatibility or validation boundary; implementation
-details within an accepted design, such as its runner, schedule or trigger mechanics, may change
-without a new ADR when those boundaries remain unchanged. Proposed [ADR
-0018](decisions/0018-isolated-live-validation-path.md), tracked in
-[#105](https://github.com/mlznlv/proxmox-iac-toolkit/issues/105), does not itself authorize a
-live run.
+Live infrastructure testing is defined separately, by the [isolated live-validation
+path](#isolated-live-validation), and must not become a dependency of normal public CI.
+Toolkit-owned live testing must be isolated from normal public CI, explicitly opt-in, and
+Architecture-reviewed with credential custody, trusted triggers, infrastructure ownership,
+cleanup, failure handling, and cost responsibility defined before implementation. The [isolated
+live-validation path](#isolated-live-validation) defines them, and its implementation remains
+deferred. A new ADR is required when a change to that path alters a durable security,
+lifecycle-ownership, compatibility, or validation boundary, including its trigger, its isolation
+from public CI, credential custody, resource confinement, cleanup ownership, or what may be
+published. Execution tooling and budget values within those boundaries may change without one.
+
+## Isolated live validation
+
+Live Proxmox and guest evidence is collected only through an opt-in path that an operator runs
+outside this repository's CI, against an isolated reference environment, for a revision already
+merged to `main`, as accepted in [ADR 0018](decisions/0018-isolated-live-validation-path.md). It
+adds to [credential-free validation](#validation-and-live-testing-boundary) and never replaces
+it, gates a pull request or release, or becomes a contributor requirement. None of it is
+implemented.
+
+### Isolation, trigger, and credentials
+
+This repository holds no live credential, no GitHub environment or secret for live validation,
+no self-hosted runner, and no workflow, Task entry point, or script default that can reach a
+reference environment, and no repository event starts a run. An operator, a maintainer who owns
+a reference environment and its credentials, starts each run by hand in a context under their
+sole control that holds no credential but the run's, for one exact full commit SHA reachable
+from `main` that has passed normal CI, naming its scenarios and budget first. Forks,
+pull-request heads, and unmerged branches are never run with credentials.
+
+Proxmox access uses an identity dedicated to live validation, through a privilege-separated API
+token created for the run, expiring with its budget, and revoked when the run ends or on
+suspected exposure; it is never `root@pam` or a token without privilege separation. Write
+privileges cover only the run's declared guest identifiers, the designated storage, and the
+designated bridge and VLAN tags, with clone or read access to designated templates. It holds no
+explicit administration privilege, but the `VM.Allocate` it needs on its guest identifiers still
+lets it delegate a subset of its own privileges there, so cleanup reconciles the ACL entries on
+the run's paths rather than relying on token revocation alone. Guest access uses an SSH key pair
+generated for the run, whose private half never leaves the execution context.
+
+### Reference environment and run lifecycle
+
+The reference environment is dedicated, and what a run creates in it is ephemeral. It may be a
+nested installation, or part of a shared one where the authorization and network boundaries
+hold, but never an operator's deployment, and its topology is never published. Every guest a run
+creates is created by OpenTofu through the toolkit's components, from a root and state the run
+owns, at a designated identifier that was free when the run started, with the run's label in its
+name. A run never adopts what it did not create. At most one run holds an environment at a time,
+within guest, CPU, memory, disk, and time limits declared and checked before anything is
+created.
+
+Whatever its outcome, every run ends with OpenTofu destroying its own root and a check that its
+identifiers are free and its paths carry only the ACL entries granted for it. A step timeout
+starts cleanup. A failed or interrupted cleanup quarantines the environment until the operator
+recovers from the retained state and removes what remains by hand, after checking it against the
+run's record. Under [lifecycle ownership](#lifecycle-ownership) there is no sweeper,
+pattern-based or direct-API deletion, or state rewrite. A retry is a new run after confirmed
+cleanup, never a repeated apply.
+
+### Scenarios, evidence, and claims
+
+A scenario must exercise a supported flow, bound a named non-claim in
+[Compatibility](compatibility.md#current-evidence-level), act only on resources its run creates,
+and have defined cleanup. Unsupported transitions are never exercised as supported, and
+replacement at the same identifier waits for a later decision. The first catalog is limited to
+the existing components' create, no-op re-plan, one supported in-place update, and destroy
+flows, and to the `qemu_guest_agent` role's convergence and second-run idempotency on a VM the
+run creates.
+
+State, plans, inventories, raw logs, keys, and credentials never leave the execution context.
+The published record is built from an allowlist of public identities and outcomes rather than
+redacted output, reaches the repository only through a reviewed pull request that passes the
+publication-safety and secret checks, and reports failed and inconclusive runs as well as
+passing ones. A passing run is runtime evidence for exactly the identities it records.
+[Compatibility](compatibility.md#live-integration-evidence) records it beside static, mocked,
+and exact-provider evidence, and does not extend it to a changed identity without a new run.
+
+Implementation needs a focused PO specification for a public harness that normal validation can
+check without credentials and an unrelated operator can run with their own values. It reconciles
+the [repository layout](#repository-layout), [Contributing](../CONTRIBUTING.md), and
+[Security](../SECURITY.md) when it merges.
 
 ## Extension boundaries
 

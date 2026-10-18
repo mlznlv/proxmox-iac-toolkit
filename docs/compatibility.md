@@ -13,7 +13,7 @@ constraints; contributor versions belong to [the declarations](../CONTRIBUTING.m
 | [LXC](../tofu/modules/proxmox-linux-container/README.md) | Proxmox VE 9.x; Debian Stable template meeting its README contract | Expected-compatible; mocked declarations, provider plans and pinned setup source |
 | [Guest-agent role](../ansible/roles/qemu_guest_agent/README.md) | Debian Stable and Kali Rolling meeting its capability contract | Expected-compatible; syntax/lint/static role checks and packaging inspection |
 | [Consumer example](../examples/separate-consumer-repository/README.md) | One pinned checkout for VM and role | Structural resolution and inventory mapping only; adds no platform target |
-| Live integration | None recorded | No runtime-validated reference platform |
+| [Live integration](#live-integration-evidence) | None recorded | No runtime-validated reference platform |
 
 Existing release-series targets retain their prior wording/evidence until their next
 requalification trigger; they do not cover an unevaluated release. Other Debian-family guests
@@ -119,6 +119,34 @@ shutdown/reboot/backup, cloud-init, host-key behavior, SSH/privilege escalation,
 operation, Ansible convergence/idempotency, VLAN/routing, DHCP lease or naming, IPv6/RA, LXC
 setup/nesting/DNS, checkout acquisition or a consumer's connectivity. Static/mocked evidence
 must never be called runtime validation.
+
+A distribution or platform becomes a runtime-validated reference platform only after a [live
+run](#live-integration-evidence) exercises it to the level claimed and this contract records
+that evidence, and then only for the identities recorded; for a guest distribution,
+[Guest-distribution qualification](#guest-distribution-qualification) also applies.
+
+## Live integration evidence
+
+None exists. Every claim on this page rests on static, mocked, exact-provider, or source
+evidence, and nothing has run against a PVE installation or a guest.
+
+[ADR 0018](decisions/0018-isolated-live-validation-path.md) defines the only path through which
+the toolkit collects live evidence: opt-in, run by an operator outside normal public CI, against
+an isolated reference environment, for a revision already merged to `main`. A run recorded here
+is runtime evidence for exactly its scenarios at the identities its sanitized record names: the
+toolkit commit; the OpenTofu, provider build, `ansible-core`, and controller Python versions;
+the PVE version and the Proxmox packages on the path; whether the installation is nested; each
+template's public identity and checksum; and each guest's distribution, architecture, release,
+and cloud-init, init system, and Python versions. It sits beside the evidence above and replaces
+none of it, and every run of the same scenarios at the same identities is reported, failed and
+inconclusive runs included.
+
+A recorded run establishes nothing for another PVE 9.x version, another provider build or tool
+version, another template or distribution, another storage or network configuration, or a
+consumer's environment, and nothing about reliability across runs, performance, availability,
+uninterrupted operation, scale, or any transition it did not exercise. Unsupported transitions
+are never recorded as supported. A claim stays attached to its recorded identities until a run
+at a changed identity is recorded.
 
 ## Guest-distribution qualification
 

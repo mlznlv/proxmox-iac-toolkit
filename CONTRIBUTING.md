@@ -98,6 +98,15 @@ older-version checks still apply. A test-runner feature's syntax prerequisite ne
 consumer minimum nor qualifies the whole suite on every later CLI. This procedure introduces no
 permanent version matrix.
 
+### Live validation
+
+Nothing in this guide is live validation, and neither `task validate` nor CI runs any. The
+opt-in path through which the toolkit may collect live Proxmox and guest evidence is defined in
+[Architecture](docs/architecture.md#isolated-live-validation) under [ADR
+0018](docs/decisions/0018-isolated-live-validation-path.md). It runs outside this repository's
+CI with an operator's own credentials, has no Task entry point, and is not implemented, so this
+guide documents no command for it.
+
 ## Contribution workflow
 
 Implementation starts from a [Specification](.github/ISSUE_TEMPLATE/spec.yml) and, when needed,
