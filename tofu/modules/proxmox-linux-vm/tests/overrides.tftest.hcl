@@ -22,6 +22,7 @@ variables {
   ipv4_address_cidr = "192.0.2.10/24"
   ipv4_gateway      = "192.0.2.1"
   dns_servers       = ["192.0.2.53"]
+  dns_search_domain = "example.invalid"
   username          = "fictional"
   ssh_public_keys   = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid"]
 }
@@ -1019,5 +1020,154 @@ run "ipv6_stays_on_the_primary_attachment" {
   assert {
     condition     = proxmox_virtual_environment_vm.this.initialization[0].ip_config[1].ipv4[0].address == "198.51.100.10/24" && proxmox_virtual_environment_vm.this.initialization[0].ip_config[1].ipv4[0].gateway == null
     error_message = "Primary IPv6 must leave an additional attachment's IPv4 configuration as declared."
+  }
+}
+
+# These runs show the declared DNS search domain reaching cloud-init unchanged
+# in each addressing mode, and leaving the DNS servers, addressing, and
+# connection output as they were. They do not show that Proxmox stores it, that
+# the provider changes an existing VM in place, or that a guest uses it: that
+# is provider and runtime behaviour, which a mock cannot exercise. The names are
+# reserved by RFC 2606.
+
+run "a_dns_search_domain_reaches_cloud_init_unchanged" {
+  command = plan
+
+  variables {
+    dns_search_domain = "Fictional-Search.example.test"
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].domain == "Fictional-Search.example.test"
+    error_message = "The declared dns_search_domain must reach cloud-init exactly as written."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].servers == tolist(["192.0.2.53"])
+    error_message = "The search domain must leave the declared DNS servers as they are."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].ip_config[0].ipv4[0].address == "192.0.2.10/24" && proxmox_virtual_environment_vm.this.initialization[0].ip_config[0].ipv4[0].gateway == "192.0.2.1"
+    error_message = "The search domain must leave the static IPv4 addressing as it is."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.name == "fictional-vm"
+    error_message = "The search domain must not be appended to the VM name."
+  }
+
+  assert {
+    condition     = output.connection == { host = "192.0.2.10", user = "fictional", port = 22 }
+    error_message = "The search domain must not change the connection output or be appended to its host."
+  }
+}
+
+run "a_single_label_dns_search_domain_is_accepted" {
+  command = plan
+
+  variables {
+    dns_search_domain = "test"
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].domain == "test"
+    error_message = "A single-label dns_search_domain must be accepted and reach cloud-init unchanged."
+  }
+}
+
+run "a_dns_search_domain_reaches_cloud_init_in_dhcp_mode" {
+  command = plan
+
+  variables {
+    ipv4_mode         = "dhcp"
+    ipv4_address_cidr = null
+    ipv4_gateway      = null
+    connection_host   = "fictional-vm.example.invalid"
+    dns_search_domain = "search.example.test"
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].domain == "search.example.test" && proxmox_virtual_environment_vm.this.initialization[0].dns[0].servers == tolist(["192.0.2.53"])
+    error_message = "In DHCP mode, the declared search domain must reach cloud-init beside the unchanged DNS servers."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].ip_config[0].ipv4[0].address == "dhcp" && proxmox_virtual_environment_vm.this.initialization[0].ip_config[0].ipv4[0].gateway == null
+    error_message = "The search domain must leave the DHCP declaration as it is."
+  }
+
+  assert {
+    condition     = output.connection == { host = "fictional-vm.example.invalid", user = "fictional", port = 22 }
+    error_message = "In DHCP mode, connection must still publish the supplied connection_host, with no domain appended."
+  }
+}
+
+run "a_dns_search_domain_reaches_cloud_init_beside_static_ipv6_and_an_attachment" {
+  command = plan
+
+  variables {
+    dns_search_domain = "search.example.test"
+    dns_servers       = ["2001:db8::53", "192.0.2.53"]
+    ipv6_address_cidr = "2001:db8::10/64"
+    ipv6_gateway      = "2001:db8::1"
+
+    additional_network_attachments = [
+      {
+        bridge            = "vmbr1"
+        vlan_id           = 42
+        ipv4_address_cidr = "198.51.100.10/24"
+        mac_address       = "00:00:5E:00:53:01"
+      },
+    ]
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].dns[0].domain == "search.example.test" && proxmox_virtual_environment_vm.this.initialization[0].dns[0].servers == tolist(["2001:db8::53", "192.0.2.53"])
+    error_message = "Beside static IPv6, the declared search domain must reach cloud-init with the mixed-family DNS servers unchanged."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.initialization[0].ip_config[0].ipv6[0].address == "2001:db8::10/64" && proxmox_virtual_environment_vm.this.initialization[0].ip_config[0].ipv6[0].gateway == "2001:db8::1"
+    error_message = "The search domain must leave the primary IPv6 configuration as declared."
+  }
+
+  assert {
+    condition     = length(proxmox_virtual_environment_vm.this.initialization[0].ip_config) == 2 && proxmox_virtual_environment_vm.this.initialization[0].ip_config[1].ipv4[0].address == "198.51.100.10/24" && proxmox_virtual_environment_vm.this.initialization[0].ip_config[1].ipv4[0].gateway == null
+    error_message = "The search domain is global DNS configuration, and must leave the additional attachment's IP configuration as declared."
+  }
+
+  assert {
+    condition     = length(proxmox_virtual_environment_vm.this.network_device) == 2 && proxmox_virtual_environment_vm.this.network_device[1].bridge == "vmbr1" && proxmox_virtual_environment_vm.this.network_device[1].vlan_id == 42 && proxmox_virtual_environment_vm.this.network_device[1].mac_address == "00:00:5E:00:53:01"
+    error_message = "The search domain must leave the additional attachment's device, VLAN, and MAC address as declared."
+  }
+
+  assert {
+    condition     = output.connection == { host = "192.0.2.10", user = "fictional", port = 22 }
+    error_message = "The search domain must not change the connection output."
+  }
+}
+
+# Proxmox joins the name and the search domain into the guest's fully qualified
+# name, which may be 253 characters. A 63-character name and a 189-character
+# domain, in labels of 63, 63, and 61, reach exactly that. One more character
+# is rejected in invalid_inputs.tftest.hcl.
+run "a_generated_name_and_domain_of_253_characters_is_accepted" {
+  command = plan
+
+  variables {
+    name              = "a01234567890123456789012345678901234567890123456789012345678901"
+    dns_search_domain = "b01234567890123456789012345678901234567890123456789012345678901.c01234567890123456789012345678901234567890123456789012345678901.d012345678901234567890123456789012345678901234567890123456789"
+  }
+
+  # Pins the count, so the run cannot pass on a shorter combination by mistake.
+  assert {
+    condition     = length(var.name) == 63 && length("${var.name}.${var.dns_search_domain}") == 253
+    error_message = "This run must exercise a 63-character name and a generated name of exactly 253 characters."
+  }
+
+  assert {
+    condition     = proxmox_virtual_environment_vm.this.name == var.name && proxmox_virtual_environment_vm.this.initialization[0].dns[0].domain == var.dns_search_domain
+    error_message = "A 253-character generated name must be accepted, with the name and domain reaching the provider unchanged."
   }
 }
