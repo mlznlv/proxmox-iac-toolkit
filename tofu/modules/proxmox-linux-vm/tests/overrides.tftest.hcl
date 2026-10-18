@@ -139,10 +139,11 @@ run "the_primary_ipv4_inputs_may_use_an_octet_of_0_and_a_prefix_length_of_8" {
 
 # The key rule allows one key per entry on one line, with or without a
 # comment, and ignores the surrounding whitespace a key read from a file
-# carries. Only acceptance is pinned here, so each entry is compared without
-# that whitespace. The ECDSA key is a second throwaway public key, chosen
-# because its encoding ends in the two padding characters base64 allows;
-# nothing holds its private half either.
+# carries. Each entry must also reach the provider without that whitespace,
+# compared exactly: the provider reads the keys back trimmed, so an entry
+# sent with it would plan a change on every run (#133). The ECDSA key is a
+# second throwaway public key, chosen because its encoding ends in the two
+# padding characters base64 allows; nothing holds its private half either.
 run "accepted_key_forms_reach_the_bootstrap_account" {
   command = plan
 
@@ -152,17 +153,21 @@ run "accepted_key_forms_reach_the_bootstrap_account" {
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 Fictional User on fictional-workstation",
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid\n",
       "ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzODQAAABhBLiiaVaauBuzwEZC9gOScy6wYIsRnIW9wHcKxI4dFAvcYFQw+R/WHzhAKFsPlNZ9qpcXgn7Ix6bY5NtdmLFGSODgqQQ71iMl6tWjndxJpVb0lvXgtqKtYIKsEdXwcX3OzA== fictional@example.invalid",
+      "  ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid",
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid\r\n",
     ]
   }
 
   assert {
-    condition = [for key in proxmox_virtual_environment_vm.this.initialization[0].user_account[0].keys : trimspace(key)] == [
+    condition = proxmox_virtual_environment_vm.this.initialization[0].user_account[0].keys == tolist([
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91",
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 Fictional User on fictional-workstation",
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid",
       "ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzODQAAABhBLiiaVaauBuzwEZC9gOScy6wYIsRnIW9wHcKxI4dFAvcYFQw+R/WHzhAKFsPlNZ9qpcXgn7Ix6bY5NtdmLFGSODgqQQ71iMl6tWjndxJpVb0lvXgtqKtYIKsEdXwcX3OzA== fictional@example.invalid",
-    ]
-    error_message = "A key without a comment, a comment containing spaces, a trailing newline, and two padding characters must all be accepted, and every entry must reach the bootstrap account in the declared order."
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid",
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKu7iWiqXXbTjQ5L37P+Vj0mDlDWxowFsZGNXHHLWv91 fictional@example.invalid",
+    ])
+    error_message = "A key without a comment, a comment containing spaces, a trailing newline, two padding characters, leading whitespace and a trailing carriage return and newline must all be accepted, and every entry must reach the bootstrap account in the declared order without its surrounding whitespace."
   }
 }
 
